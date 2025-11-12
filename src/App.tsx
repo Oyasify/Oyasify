@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -11,7 +9,7 @@ import {
 import { generateScript, chatWithOyasifyAI } from './services/geminiService';
 import { 
     Home, Mic, User as UserIcon, GraduationCap, Send, Plus, Paperclip, LogOut,
-    X, Bell, Palette, Download, Link as LinkIcon, Heart, Shield, Crown, Flower2, Rocket, Sparkles, Pencil, MessageSquare, Droplet, Flame, Gem, Leaf, MicOff, Play, Pause, Check, Users, Search
+    X, Bell, Palette, Download, Link as LinkIcon, Heart, Shield, Crown, Flower2, Rocket, Sparkles, Pencil, MessageSquare, Droplet, Flame, Gem, Leaf, MicOff, Play, Pause, Check, Users, Search, Phone
 } from 'lucide-react';
 
 // --- Local Storage Hooks ---
@@ -21,7 +19,7 @@ const useLocalStorage = <T,>(key: string, initialValue: T): [T, (value: T | ((va
             const item = window.localStorage.getItem(key);
             return item ? JSON.parse(item) : initialValue;
         } catch (error) {
-            // FIX: Cast caught error to 'any' for console.error.
+            // Fix: The caught error is of type 'unknown'. Cast to 'any' to log it.
             console.error(error as any);
             return initialValue;
         }
@@ -33,7 +31,7 @@ const useLocalStorage = <T,>(key: string, initialValue: T): [T, (value: T | ((va
             setStoredValue(valueToStore);
             window.localStorage.setItem(key, JSON.stringify(valueToStore));
         } catch (error) {
-            // FIX: Cast caught error to 'any' for console.error.
+            // Fix: The caught error is of type 'unknown'. Cast to 'any' to log it.
             console.error(error as any);
         }
     };
@@ -63,7 +61,7 @@ const playSound = (type: 'click' | 'notification' | 'sent' | 'start_recording' |
     let soundFile: string;
     switch (type) {
         case 'notification':
-            soundFile = 'data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZ4KSYXgA837/3wMRgBwA9A4+BsDP/y//4wMQaAEMAwwDEYEyP/DAAFFQz/wAY709//5x//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//-AANCLAmp96AAAADAAAAABhAAQN+8AAAACgAAATEFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTAAAAAAEAAANIAAD+AAAQAAAAAEgAAAAAAAAAEhQAAQAAAAAAAAAEAAADgAABAAAAAAAAAAAAAAA';
+            soundFile = 'data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZ4KSYXgA837/3wMRgBwA9A4+BsDP/y//4wMQaAEMAwwDEYEyP/DAAFFQz/wAY709//5x//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//-AANCLAmp96AAAADAAAAABhAAQN+8AAAACgAAATEFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTAAAAAAEAAANIAAD+AAAQAAAAAEgAAAAAAAAAEhQAAQAAAAAAAAAEAAADgAABAAAAAAAAAAAAAAA';
             break;
         case 'click':
         case 'sent':
@@ -73,7 +71,9 @@ const playSound = (type: 'click' | 'notification' | 'sent' | 'start_recording' |
             soundFile = 'data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZ4JFdpKgdHVkXY8gAR//LgAAAAAAAAAAAABQTEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV-AAVERpqgA9QAL/8AAB//4gAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
             break;
     }
-    // FIX: Explicitly cast the error object to a string for logging to prevent type errors with strict settings.
+    // Fix: The error object from a promise rejection is of type `unknown`.
+    // Cast to 'any' to allow logging with console.error.
+    // FIX: The error is of type unknown. Explicitly cast it to a string for logging to resolve the type error.
     new Audio(soundFile).play().catch(e => console.error('Error playing sound:', String(e)));
 };
 
@@ -280,6 +280,45 @@ const Modal: React.FC<{ title: string, children: React.ReactNode, onClose: () =>
     </motion.div>
 );
 
+const ImageViewerModal: React.FC<{ imageUrl: string, onClose: () => void }> = ({ imageUrl, onClose }) => {
+    const handleDownload = () => {
+        const link = document.createElement('a');
+        link.href = imageUrl;
+        link.download = `oyasify-ai-image-${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+            onClick={onClose}
+        >
+            <motion.div 
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0.9 }}
+                className="relative max-w-4xl max-h-[90vh]"
+                onClick={e => e.stopPropagation()}
+            >
+                <img src={imageUrl} alt="Generated content" className="object-contain w-full h-full rounded-lg" />
+                <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 flex gap-4">
+                    <motion.button whileTap={{scale:0.95}} onClick={handleDownload} className="p-2.5 bg-accent-primary text-white rounded-full shadow-lg">
+                        <Download size={20} />
+                    </motion.button>
+                    <motion.button whileTap={{scale:0.95}} onClick={onClose} className="p-2.5 bg-danger text-white rounded-full shadow-lg">
+                        <X size={20} />
+                    </motion.button>
+                </div>
+            </motion.div>
+        </motion.div>
+    );
+};
+
 const AudioPlayer: React.FC<{ src: string; isMe: boolean }> = ({ src, isMe }) => {
     const audioRef = useRef<HTMLAudioElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -354,7 +393,7 @@ const ChatInput: React.FC<{ onSendMessage: (msg: Message) => void }> = ({ onSend
                 mediaRecorderRef.current.start();
                 setIsRecording(true);
             } catch (err) {
-                // FIX: Cast caught error to 'any' for console.error.
+                // Fix: The caught error is of type 'unknown'. Cast to 'any' to log it.
                 console.error("Error starting recording:", err as any);
             }
         }
@@ -395,9 +434,17 @@ const ChatInput: React.FC<{ onSendMessage: (msg: Message) => void }> = ({ onSend
     );
 };
 
-const ChatBubble: React.FC<{ message: Message }> = ({ message }) => {
+const ChatBubble: React.FC<{ message: Message; onImageClick?: (url: string) => void }> = ({ message, onImageClick }) => {
     const isMe = message.senderId === 'me';
     const isAI = message.senderId === 'ai';
+
+    if (message.type === 'system') {
+        return (
+            <div className="text-center text-xs text-text-secondary py-2">
+                {message.content}
+            </div>
+        );
+    }
 
     return (
         <motion.div 
@@ -407,7 +454,7 @@ const ChatBubble: React.FC<{ message: Message }> = ({ message }) => {
             {isAI && <LogoIcon className="text-accent-primary h-6 w-6 flex-shrink-0 mb-1" />}
             <div className={`max-w-[80%] md:max-w-[70%] p-3 rounded-2xl text-sm ${isMe ? 'bg-accent-primary text-white rounded-br-lg' : 'bg-bg-tertiary rounded-bl-lg'}`}>
                  {message.type === 'text' && <p className="break-words">{message.content}</p>}
-                 {message.type === 'image' && <img src={message.mediaUrl} alt="media content" className="rounded-lg max-w-full h-auto" />}
+                 {message.type === 'image' && <img onClick={() => onImageClick && message.mediaUrl && onImageClick(message.mediaUrl)} src={message.mediaUrl} alt="media content" className={`rounded-lg max-w-full h-auto ${onImageClick ? 'cursor-pointer' : ''}`} />}
                  {message.type === 'video' && <video src={message.mediaUrl} controls className="rounded-lg max-w-full" />}
                  {message.type === 'audio' && message.mediaUrl && <AudioPlayer src={message.mediaUrl} isMe={isMe} />}
             </div>
@@ -579,6 +626,7 @@ const AiScriptScreen = () => {
             const result = await generateScript(idea);
             setScript(result);
         } catch (error) {
+            // Fix: The caught error is of type 'unknown'. Cast to 'any' to log it.
             console.error(error as any);
             setScript("<h2>Erro</h2><p>Algo deu errado. Por favor, verifique o console para mais detalhes.</p>");
         }
@@ -588,14 +636,14 @@ const AiScriptScreen = () => {
     return (
         <div className="max-w-2xl mx-auto flex flex-col items-center">
             <h1 className="text-3xl font-bold mb-1 text-text-primary flex items-center gap-2"><Sparkles className="text-accent-primary" />Roteiro AI</h1>
-            <p className="text-text-secondary mb-6 text-center max-w-lg text-base">Gere roteiros criativos e envolventes para seus vídeos, músicas ou qualquer conteúdo.</p>
+            <p className="text-text-secondary mb-6 text-center max-w-lg text-base">Gere roteiros criativos para seus vídeos, seja para YouTube, TikTok ou outra plataforma.</p>
             
             <Card className="w-full p-6">
                 <label className="font-semibold text-text-primary mb-2 block text-base">Sua Ideia para o Roteiro</label>
                 <textarea
                     value={idea}
                     onChange={(e) => setIdea(e.target.value)}
-                    placeholder="Ex: Um roteiro para um vídeo de YouTube sobre dicas de canto para iniciantes, com duração de 5 minutos."
+                    placeholder="Ex: um roteiro para um vídeo no TikTok sobre 3 dicas para viajar barato."
                     className="w-full h-32 p-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-primary resize-none text-text-primary text-sm"
                 />
                 <motion.button
@@ -679,786 +727,4 @@ const AcademyScreen = () => {
                              whileHover={{ x: 4 }}
                         >
                              <Card className="!p-3 flex items-center space-x-4">
-                                 <img src={lesson.thumbnailUrl} alt={lesson.title} className="w-24 h-16 object-cover rounded-lg" />
-                                 <div className="flex-1">
-                                     <h3 className="font-bold text-base">{lesson.title}</h3>
-                                     <p className="text-sm text-text-secondary">{lesson.duration}</p>
-                                 </div>
-                             </Card>
-                        </motion.div>
-                    ))}
-                </motion.div>
-            </motion.div>
-        </motion.div>
-    );
-};
-
-const ApoioScreen: React.FC<{ user: AppUser, showNotification: (msg: string) => void }> = ({ user, showNotification }) => {
-    const [requests, setRequests] = useLocalStorage<{ userId: number, userName: string }[]>('oyasify-supporter-requests', []);
-    const hasRequested = requests.some(r => r.userId === user.id);
-
-    const handleRequestSupporter = () => {
-        if (hasRequested) {
-            showNotification('Você já enviou um pedido.');
-            return;
-        }
-        setRequests([...requests, { userId: user.id, userName: user.name }]);
-        showNotification('Pedido enviado! Aguarde a aprovação do admin.');
-    };
-
-    return (
-        <div className="max-w-2xl mx-auto flex flex-col items-center text-center">
-            <h1 className="text-3xl font-bold mb-2 text-text-primary flex items-center gap-2"><Heart className="text-accent-primary" />Apoie o Oyasify</h1>
-            <p className="text-text-secondary mb-6 text-base">Seu apoio é fundamental para a evolução contínua do projeto!</p>
-            
-            <Card className="w-full p-6">
-                {user.isSupporter ? (
-                    <div className="text-center">
-                        <Crown size={48} className="mx-auto text-yellow-500 mb-3" />
-                        <h2 className="text-xl font-bold">Obrigado por ser um Apoiador!</h2>
-                        <p className="text-text-secondary mt-1">Você tem acesso ao tema exclusivo e a futuros benefícios!</p>
-                    </div>
-                ) : (
-                    <>
-                        <p className="text-text-secondary mb-4">Clique no botão abaixo para contribuir com o projeto através da plataforma Kiwify.</p>
-                        <motion.button 
-                            whileTap={{ scale: 0.95 }} whileHover={{y: -2}}
-                            onClick={() => window.open('https://pay.kiwify.com.br/BAp0lC8', '_blank')}
-                            className="w-full bg-accent-primary text-white font-bold py-3 px-4 rounded-xl hover:bg-accent-secondary transition-colors text-base"
-                        >
-                            Apoie aqui
-                        </motion.button>
-                        <div className="my-4 text-center text-text-secondary text-sm">ou</div>
-                        <motion.button 
-                            whileTap={{ scale: 0.95 }} whileHover={{y: -2}}
-                            onClick={handleRequestSupporter}
-                            disabled={hasRequested}
-                            className="w-full bg-bg-tertiary text-text-primary font-bold py-3 px-4 rounded-xl hover:bg-accent-primary/20 disabled:bg-bg-tertiary disabled:text-text-secondary disabled:cursor-not-allowed transition-colors text-base"
-                        >
-                            {hasRequested ? 'Pedido Enviado' : 'Já apoiei! Liberar cargo'}
-                        </motion.button>
-                        <p className="text-xs text-text-secondary mt-3">Após apoiar, clique no botão acima para solicitar seu cargo de Apoiador.</p>
-                    </>
-                )}
-            </Card>
-        </div>
-    );
-};
-
-const AIChatInput: React.FC<{ onSendMessage: (text: string) => void; isLoading: boolean }> = ({ onSendMessage, isLoading }) => {
-    const [text, setText] = useState('');
-
-    const handleSend = () => {
-        if (!text.trim() || isLoading) return;
-        onSendMessage(text);
-        setText('');
-    };
-
-    return (
-        <div className="flex-shrink-0 p-2 border-t border-bg-tertiary flex items-center gap-2">
-            <input 
-                type="text" 
-                value={text} 
-                onChange={e => setText(e.target.value)} 
-                onKeyDown={e => e.key === 'Enter' && handleSend()} 
-                placeholder="Digite sua pergunta aqui..." 
-                className="flex-1 bg-bg-tertiary p-2.5 rounded-full outline-none px-4 text-sm"
-                disabled={isLoading}
-            />
-            <motion.button 
-                whileTap={{ scale: 0.9 }} 
-                onClick={handleSend} 
-                className="p-2.5 rounded-full bg-accent-primary text-white disabled:bg-bg-tertiary"
-                disabled={isLoading}
-            >
-                <Send size={22} />
-            </motion.button>
-        </div>
-    );
-};
-
-const OyasifyAIScreen: React.FC = () => {
-    const [messages, setMessages] = useState<Message[]>([
-        { id: 0, type: 'text', senderId: 'ai', content: 'Olá! Eu sou o Oyasify AI. Como posso te ajudar a criar algo incrível hoje?', timestamp: '' }
-    ]);
-    const [isLoading, setIsLoading] = useState(false);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages]);
-
-    const handleSendMessage = async (text: string) => {
-        const userMessage: Message = {
-            id: Date.now(),
-            type: 'text',
-            content: text,
-            senderId: 'me',
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-        setMessages(prev => [...prev, userMessage]);
-        setIsLoading(true);
-
-        const aiResponse = await chatWithOyasifyAI(text);
-
-        const aiMessage: Message = {
-            id: Date.now() + 1,
-            type: 'text',
-            content: aiResponse,
-            senderId: 'ai',
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-        setMessages(prev => [...prev, aiMessage]);
-        setIsLoading(false);
-    };
-
-    return (
-        <div className="h-full flex flex-col max-w-2xl mx-auto">
-            <h1 className="text-2xl font-bold text-center text-text-primary mb-3 flex-shrink-0">Oyasify AI</h1>
-            <div className="flex-1 flex flex-col bg-bg-secondary rounded-2xl shadow-md overflow-hidden">
-                <div className="flex-1 p-3 overflow-y-auto space-y-3 overscroll-contain">
-                    {messages.map(msg => <ChatBubble key={msg.id} message={msg} />)}
-                    {isLoading && (
-                        <motion.div className="flex items-end gap-2 justify-start">
-                             <LogoIcon className="text-accent-primary h-6 w-6 flex-shrink-0 mb-1" />
-                            <div className="p-3 rounded-2xl bg-bg-tertiary rounded-bl-lg flex space-x-1.5">
-                                 <motion.span className="w-2 h-2 bg-accent-primary rounded-full" animate={{ y: [0, -6, 0] }} transition={{ duration: 0.5, repeat: Infinity, ease: 'easeInOut' }} />
-                                 <motion.span className="w-2 h-2 bg-accent-primary rounded-full" animate={{ y: [0, -6, 0] }} transition={{ duration: 0.5, delay: 0.1, repeat: Infinity, ease: 'easeInOut' }} />
-                                 <motion.span className="w-2 h-2 bg-accent-primary rounded-full" animate={{ y: [0, -6, 0] }} transition={{ duration: 0.5, delay: 0.2, repeat: Infinity, ease: 'easeInOut' }} />
-                            </div>
-                        </motion.div>
-                    )}
-                    <div ref={messagesEndRef} />
-                </div>
-                <AIChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
-            </div>
-        </div>
-    );
-};
-
-
-const ChatView: React.FC<{ friend: Friend, chat: Chat, onBack: () => void, onSendMessage: (msg: Message) => void }> = ({ friend, chat, onBack, onSendMessage }) => {
-    const messagesEndRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [chat.messages]);
-    
-    return (
-        <div className="h-full flex flex-col bg-bg-secondary rounded-2xl shadow-md">
-            <header className="flex-shrink-0 flex items-center p-2.5 border-b border-bg-tertiary">
-                <motion.button whileTap={{scale:0.9}} onClick={() => { playSound('click'); onBack(); }} className="mr-2 p-2 rounded-full hover:bg-bg-tertiary text-text-secondary">&larr;</motion.button>
-                <img src={friend.avatarUrl} className="w-9 h-9 rounded-full" />
-                <h2 className="font-bold ml-3 text-base">{friend.name}</h2>
-            </header>
-            <div className="flex-1 p-3 overflow-y-auto space-y-3 overscroll-contain">
-                {chat.messages.map(msg => <ChatBubble key={msg.id} message={msg} />)}
-                <div ref={messagesEndRef} />
-            </div>
-             <ChatInput onSendMessage={onSendMessage} />
-        </div>
-    );
-};
-
-const ProfileView: React.FC<{ user: AppUser, setUser: (user: AppUser) => void, showNotification: (msg: string) => void }> = ({ user, setUser, showNotification }) => {
-    const { theme, setTheme } = useContext(ThemeContext);
-    const [isEditingName, setIsEditingName] = useState(false);
-    const [isEditingBio, setIsEditingBio] = useState(false);
-    const [name, setName] = useState(user.name);
-    const [bio, setBio] = useState(user.bio);
-    const [isAdminModalOpen, setAdminModalOpen] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    const handleSaveName = () => {
-        setUser({ ...user, name });
-        setIsEditingName(false);
-        showNotification('Nome salvo!');
-    };
-    
-    const handleSaveBio = () => {
-        setUser({ ...user, bio });
-        setIsEditingBio(false);
-        showNotification('Biografia salva!');
-    };
-
-    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const avatarUrl = URL.createObjectURL(e.target.files[0]);
-            setUser({ ...user, avatarUrl });
-        }
-    };
-    
-    const handleThemeChange = (themeKey: string) => {
-        const newTheme = THEMES.find(t => t.key === themeKey);
-        if (newTheme) {
-            setTheme(newTheme);
-            setUser({ ...user, theme: themeKey });
-        }
-    };
-    
-    const THEME_ICONS: {[key: string]: React.FC<any>} = {
-        rosa: Flower2,
-        oceano: Droplet,
-        solar: Flame,
-        ametista: Gem,
-        rubi: Heart,
-        floresta: Leaf,
-        apoiador: Crown,
-    }
-
-    return (
-        <div className="space-y-4">
-            <AnimatePresence>
-                {isAdminModalOpen && <AdminModal onClose={() => setAdminModalOpen(false)} showNotification={showNotification} />}
-            </AnimatePresence>
-            
-            <Card className="!p-5">
-                 <div className="flex flex-col items-center text-center">
-                    <div className="relative">
-                        <img src={user.avatarUrl} alt={name} className="w-20 h-20 rounded-full object-cover" />
-                        <motion.button whileTap={{scale: 0.9}} onClick={() => fileInputRef.current?.click()} className="absolute bottom-0 right-0 bg-accent-primary p-1 rounded-full border-2 border-bg-secondary">
-                            <Pencil size={14} className="text-white"/>
-                        </motion.button>
-                         <input type="file" accept="image/*" ref={fileInputRef} onChange={handleAvatarChange} className="hidden" />
-                    </div>
-                    <h2 className="text-2xl font-bold mt-2">{user.name}</h2>
-                    <p className="text-text-secondary max-w-sm text-sm mt-1">{user.bio}</p>
-                </div>
-            </Card>
-
-            {user.role === 'owner' && (
-                <motion.button whileTap={{ scale: 0.95 }} onClick={() => { playSound('click'); setAdminModalOpen(true); }} className="w-full p-2.5 bg-accent-primary text-white font-bold rounded-xl hover:bg-accent-secondary text-sm">
-                    Painel de Administrador
-                </motion.button>
-            )}
-            
-            <Card className="!p-5">
-                <div className="flex justify-between items-center">
-                    <p className="text-text-secondary text-xs">Nome de exibição</p>
-                    <button onClick={() => { playSound('click'); setIsEditingName(true); }} className="text-accent-primary font-bold text-xs">Editar</button>
-                </div>
-                {isEditingName ? (
-                    <div className="mt-2 flex gap-2">
-                        <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full p-1.5 bg-bg-tertiary rounded-md focus:outline-none focus:ring-2 ring-accent-primary text-sm"/>
-                        <button onClick={handleSaveName} className="px-2.5 bg-accent-primary text-white rounded-md font-semibold text-xs">Salvar</button>
-                    </div>
-                ): <p className="font-bold text-base mt-1">{user.name}</p>}
-            </Card>
-             <Card className="!p-5">
-                <div className="flex justify-between items-center">
-                    <p className="text-text-secondary text-xs">Biografia</p>
-                    <button onClick={() => { playSound('click'); setIsEditingBio(true); }} className="text-accent-primary font-bold text-xs">Editar</button>
-                </div>
-                 {isEditingBio ? (
-                     <div className="mt-2 flex gap-2">
-                         <textarea value={bio} onChange={e => setBio(e.target.value)} className="w-full p-1.5 h-16 bg-bg-tertiary rounded-md focus:outline-none focus:ring-2 ring-accent-primary resize-none text-sm"/>
-                         <button onClick={handleSaveBio} className="px-2.5 bg-accent-primary text-white rounded-md font-semibold text-xs">Salvar</button>
-                     </div>
-                 ) : <p className="font-bold text-base mt-1">{user.bio}</p>}
-            </Card>
-
-            <Card className="!p-5">
-                <h3 className="text-lg font-bold mb-3">Tema Visual</h3>
-                <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
-                    {THEMES.filter(t => t.key !== 'apoiador' || user.isSupporter).map(t => {
-                        const Icon = THEME_ICONS[t.key] || Palette;
-                        return (
-                        <div key={t.key} onClick={() => { playSound('click'); handleThemeChange(t.key); }} className="cursor-pointer text-center group">
-                            <motion.div 
-                                className="w-12 h-12 rounded-full flex items-center justify-center relative transition-all" 
-                                style={{ backgroundColor: t.properties['--accent-primary'] }}
-                                animate={{ scale: theme.key === t.key ? 1.1 : 1, y: theme.key === t.key ? -5 : 0 }}
-                            >
-                               <Icon size={24} className="text-white/90" />
-                               {theme.key === t.key && <motion.div layoutId="theme-selector" className="absolute inset-0 ring-2 ring-accent-primary rounded-full" />}
-                            </motion.div>
-                        </div>
-                    )})}
-                </div>
-            </Card>
-        </div>
-    )
-}
-
-interface FriendRequest { from: User; toId: number; }
-
-const FriendsChatScreen: React.FC<{ currentUser: AppUser, showNotification: (msg: string) => void }> = ({ currentUser, showNotification }) => {
-    const [view, setView] = useState<'chat' | 'list'>('list');
-    const [friends, setFriends] = useLocalStorage<Friend[]>('oyasify-friends', initialFriends);
-    const [chats, setChats] = useLocalStorage<Chat[]>('oyasify-chats', initialChats);
-    const [allUsers] = useLocalStorage<AppUser[]>('oyasify-users', []);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [friendRequests, setFriendRequests] = useLocalStorage<FriendRequest[]>('oyasify-requests', []);
-    const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
-    const [subView, setSubView] = useState<'friends' | 'requests' | 'add'>('friends');
-
-    const incomingRequests = friendRequests.filter(req => req.toId === currentUser.id);
-    const sentRequests = friendRequests.filter(req => req.from.id === currentUser.id);
-
-    const discoverableFilteredUsers = searchQuery.trim() === '' ? [] : allUsers.filter(u => {
-        if (u.id === currentUser.id) return false;
-        if (friends.some(f => f.id === u.id)) return false;
-        if (incomingRequests.some(r => r.from.id === u.id)) return false;
-        return u.name.toLowerCase().includes(searchQuery.toLowerCase());
-    });
-    
-    const handleSelectFriend = (friend: Friend) => {
-        setSelectedFriend(friend);
-        if (!chats.find(c => c.friendId === friend.id)) {
-            setChats([...chats, { friendId: friend.id, messages: [] }]);
-        }
-        setView('chat');
-    };
-    
-    const handleSendRequest = (user: User) => {
-        if (friendRequests.some(r => r.from.id === currentUser.id && r.toId === user.id)) {
-            showNotification('Pedido de amizade já enviado.');
-            return;
-        }
-        playSound('click');
-        const newRequest: FriendRequest = { from: currentUser, toId: user.id };
-        setFriendRequests([...friendRequests, newRequest]);
-        showNotification(`Pedido de amizade enviado para ${user.name}!`);
-    };
-    
-    const handleAcceptRequest = (req: FriendRequest) => {
-        const newFriend: Friend = { ...req.from, online: true };
-        setFriends([...friends, newFriend]);
-        setFriendRequests(friendRequests.filter(r => !(r.from.id === req.from.id && r.toId === currentUser.id)));
-        showNotification(`${req.from.name} é seu amigo agora!`);
-    };
-
-    const handleDeclineRequest = (req: FriendRequest) => {
-        setFriendRequests(friendRequests.filter(r => !(r.from.id === req.from.id && r.toId === currentUser.id)));
-        showNotification(`Pedido de ${req.from.name} recusado.`);
-    };
-
-    const handleSendMessage = (newMessage: Message) => {
-        if (!selectedFriend) return;
-        const newChats = chats.map(c => 
-            c.friendId === selectedFriend.id 
-            ? { ...c, messages: [...c.messages, newMessage] } 
-            : c
-        );
-        setChats(newChats);
-    };
-    
-    if (view === 'chat' && selectedFriend) {
-        const chat = chats.find(c => c.friendId === selectedFriend.id);
-        return (
-            <ChatView 
-                friend={selectedFriend} 
-                chat={chat!} 
-                onBack={() => setView('list')} 
-                onSendMessage={handleSendMessage}
-            />
-        );
-    }
-
-    return (
-         <div className="flex flex-col h-full">
-            <div className="flex-shrink-0 border-b border-bg-tertiary mb-3">
-                 <nav className="-mb-px flex space-x-5">
-                     <button onClick={() => setSubView('friends')} className={`py-2 px-1 border-b-2 font-medium text-sm ${subView === 'friends' ? 'border-accent-primary text-accent-primary' : 'border-transparent text-text-secondary hover:text-text-primary'}`}>Amigos</button>
-                     <button onClick={() => setSubView('requests')} className={`py-2 px-1 border-b-2 font-medium text-sm relative ${subView === 'requests' ? 'border-accent-primary text-accent-primary' : 'border-transparent text-text-secondary hover:text-text-primary'}`}>
-                        Pedidos
-                        {incomingRequests.length > 0 && <span className="absolute top-0 -right-3 h-4 w-4 bg-danger text-white text-xs rounded-full flex items-center justify-center">{incomingRequests.length}</span>}
-                    </button>
-                     <button onClick={() => setSubView('add')} className={`py-2 px-1 border-b-2 font-medium text-sm ${subView === 'add' ? 'border-accent-primary text-accent-primary' : 'border-transparent text-text-secondary hover:text-text-primary'}`}>Adicionar</button>
-                 </nav>
-            </div>
-             <div className="flex-1 overflow-y-auto pr-1 -mr-2 overscroll-contain">
-                 <AnimatePresence mode="wait">
-                     <motion.div 
-                        key={subView} 
-                        initial={{opacity:0, y:10}} 
-                        animate={{opacity:1, y:0}} 
-                        exit={{opacity:0, y:-10}} 
-                        variants={containerVariants}
-                        className="space-y-3"
-                     >
-                         {subView === 'friends' && (
-                             friends.map(friend => (
-                                <motion.div key={friend.id} variants={itemVariants}>
-                                 <Card onClick={() => handleSelectFriend(friend)} className="!p-3 flex items-center">
-                                     <div className="relative">
-                                         <img src={friend.avatarUrl} className="w-12 h-12 rounded-full" />
-                                         <span className={`absolute bottom-0 right-0 block h-3 w-3 rounded-full ${friend.online ? 'bg-status-online' : 'bg-status-offline'} border-2 border-bg-secondary`}></span>
-                                     </div>
-                                     <div className="ml-3">
-                                         <p className="font-bold text-base">{friend.name}</p>
-                                         <p className="text-sm text-text-secondary">{friend.online ? 'Online' : 'Offline'}</p>
-                                     </div>
-                                 </Card>
-                                 </motion.div>
-                             ))
-                         )}
-                         {subView === 'requests' && (
-                            incomingRequests.length > 0 ? incomingRequests.map(req => (
-                                <motion.div key={req.from.id} variants={itemVariants}>
-                                <Card className="!p-3 flex items-center justify-between">
-                                    <div className="flex items-center">
-                                        <img src={req.from.avatarUrl} className="w-12 h-12 rounded-full mr-3" />
-                                        <p className="font-semibold text-base">{req.from.name}</p>
-                                    </div>
-                                    <div className="flex gap-2">
-                                         <motion.button whileTap={{scale:0.9}} onClick={() => { playSound('click'); handleAcceptRequest(req);}} className="p-2.5 bg-green-500/10 text-green-600 rounded-full"><Check size={18} strokeWidth={3}/></motion.button>
-                                         <motion.button whileTap={{scale:0.9}} onClick={() => { playSound('click'); handleDeclineRequest(req);}} className="p-2.5 bg-danger/10 text-danger rounded-full"><X size={18} strokeWidth={3}/></motion.button>
-                                    </div>
-                                </Card>
-                                </motion.div>
-                            )) : <p className="text-center text-text-secondary mt-8 text-base">Nenhum pedido de amizade.</p>
-                         )}
-                         {subView === 'add' && (
-                            <div>
-                                <div className="relative mb-3">
-                                    <input 
-                                        type="text"
-                                        placeholder="Pesquisar usuário por nome..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full p-3 pl-10 bg-bg-tertiary rounded-lg focus:outline-none focus:ring-2 ring-accent-primary text-base"
-                                    />
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" size={20}/>
-                                </div>
-                                <motion.div className="space-y-3" variants={containerVariants}>
-                                    {discoverableFilteredUsers.length > 0 ? (
-                                        discoverableFilteredUsers.map(user => {
-                                            const hasSentRequest = sentRequests.some(r => r.toId === user.id);
-                                            return (
-                                                 <motion.div key={user.id} variants={itemVariants}>
-                                                 <Card className="!p-3 flex items-center justify-between">
-                                                     <div className="flex items-center">
-                                                         <img src={user.avatarUrl} className="w-12 h-12 rounded-full mr-3" />
-                                                         <p className="font-semibold text-base">{user.name}</p>
-                                                     </div>
-                                                     <motion.button 
-                                                         whileTap={{scale: hasSentRequest ? 1 : 0.9}} 
-                                                         onClick={() => { if (!hasSentRequest) { handleSendRequest(user); } }} 
-                                                         disabled={hasSentRequest}
-                                                         className="p-2.5 rounded-full disabled:bg-bg-tertiary disabled:cursor-not-allowed enabled:bg-accent-primary/10 enabled:text-accent-primary transition-colors"
-                                                     >
-                                                        {hasSentRequest ? <Check size={18} strokeWidth={3} className="text-text-secondary"/> : <Plus size={18} strokeWidth={3}/>}
-                                                     </motion.button>
-                                                 </Card>
-                                                 </motion.div>
-                                            )
-                                        })
-                                    ) : (
-                                        searchQuery.trim() !== '' && <p className="text-center text-text-secondary mt-8 text-base">Nenhum usuário encontrado.</p>
-                                    )}
-                                     {searchQuery.trim() === '' && <p className="text-center text-text-secondary mt-8 text-base">Digite um nome para buscar um usuário.</p>}
-                                </motion.div>
-                            </div>
-                         )}
-                     </motion.div>
-                 </AnimatePresence>
-             </div>
-        </div>
-    );
-};
-
-const ProfileScreen: React.FC<{ user: AppUser, setUser: (user: AppUser) => void, showNotification: (msg: string) => void }> = ({ user, setUser, showNotification }) => {
-    const [tab, setTab] = useState<'profile' | 'friends'>('profile');
-    
-    return (
-        <div className="max-w-2xl mx-auto flex flex-col h-full">
-            <div className="border-b border-bg-tertiary/50 mb-4 flex-shrink-0">
-                <nav className="-mb-px flex justify-center space-x-8" aria-label="Tabs">
-                    <button onClick={() => { playSound('click'); setTab('profile'); }} className={`whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm ${tab === 'profile' ? 'border-accent-primary text-accent-primary' : 'border-transparent text-text-secondary hover:text-text-primary'}`}>
-                        Perfil
-                    </button>
-                    <button onClick={() => { playSound('click'); setTab('friends'); }} className={`whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm ${tab === 'friends' ? 'border-accent-primary text-accent-primary' : 'border-transparent text-text-secondary hover:text-text-primary'}`}>
-                        Amigos & Chat
-                    </button>
-                </nav>
-            </div>
-
-            <div className="flex-1 min-h-0">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={tab}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{duration: 0.2}}
-                        className="h-full"
-                    >
-                        {tab === 'profile' && <ProfileView user={user} setUser={setUser} showNotification={showNotification} />}
-                        {tab === 'friends' && <FriendsChatScreen currentUser={user} showNotification={showNotification}/>}
-                    </motion.div>
-                </AnimatePresence>
-            </div>
-        </div>
-    );
-};
-
-const MainContent: React.FC<{ screen: Screen, user: AppUser, setUser: (user: AppUser) => void, showNotification: (msg: string) => void, setScreen: (s: Screen) => void }> = ({ screen, user, setUser, showNotification, setScreen }) => {
-    return (
-        <main className="flex-1 overflow-y-auto p-4 pb-20 overscroll-contain">
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={screen}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.2 }}
-                    className="h-full"
-                >
-                    {screen === 'home' && <HomeScreen user={user} setScreen={setScreen} />}
-                    {screen === 'vocal' && <VocalScreen />}
-                    {screen === 'ai-script' && <AiScriptScreen />}
-                    {screen === 'profile' && <ProfileScreen user={user} setUser={setUser} showNotification={showNotification} />}
-                    {screen === 'academy' && <AcademyScreen />}
-                    {screen === 'apoio' && <ApoioScreen user={user} showNotification={showNotification} />}
-                    {screen === 'oyasify-ai' && <OyasifyAIScreen />}
-                </motion.div>
-            </AnimatePresence>
-        </main>
-    );
-};
-
-const Header: React.FC<{ onMenuClick: () => void, onNotificationsClick: () => void, user: AppUser }> = ({ onMenuClick, onNotificationsClick, user }) => {
-    const [supporterRequests] = useLocalStorage('oyasify-supporter-requests', []);
-    const hasNotifications = user.role === 'owner' && supporterRequests.length > 0;
-
-    return (
-    <header className="flex-shrink-0 bg-transparent h-16 flex items-center justify-between px-4 sm:px-6 z-10">
-        <motion.button whileTap={{ scale: 0.9 }} onClick={onMenuClick} className="p-2 rounded-full">
-            <LogoIcon className="text-accent-primary h-8 w-8" />
-        </motion.button>
-        <motion.button whileTap={{ scale: 0.9 }} onClick={onNotificationsClick} className="p-2 rounded-full relative">
-            <Bell className="text-gray-500" size={24} />
-             {hasNotifications && <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger rounded-full border border-bg-primary" />}
-        </motion.button>
-    </header>
-    );
-};
-
-const Drawer: React.FC<{ isOpen: boolean, setOpen: (isOpen: boolean) => void, user: AppUser, setScreen: (s: Screen) => void, onLogout: () => void, currentScreen: Screen }> = ({ isOpen, setOpen, user, setScreen, onLogout, currentScreen }) => {
-    const handleLogout = () => {
-        playSound('click');
-        onLogout();
-    };
-
-    const navItems = [
-        { screen: 'home', label: 'Início' },
-        { screen: 'vocal', label: 'Vocal' },
-        { screen: 'academy', label: 'Academy' },
-        { screen: 'ai-script', label: 'Roteiro AI' },
-        { screen: 'oyasify-ai', label: 'Oyasify AI' },
-        { screen: 'apoio', label: 'Apoio' },
-    ] as const;
-
-    return (
-        <AnimatePresence>
-            {isOpen && (
-                <>
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="fixed inset-0 bg-black/30 z-30"
-                    onClick={() => setOpen(false)}
-                />
-                <motion.div
-                    initial={{ x: '-100%' }}
-                    animate={{ x: 0 }}
-                    exit={{ x: '-100%' }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                    className="absolute top-0 left-0 h-full w-72 bg-bg-secondary z-40 shadow-xl flex flex-col p-5 rounded-r-2xl"
-                >
-                    <div className="flex items-center space-x-3 mb-6">
-                         <div className="w-12 h-12 rounded-full bg-bg-tertiary flex items-center justify-center text-accent-primary font-bold text-xl">
-                            {user.name.substring(0, 2).toUpperCase()}
-                        </div>
-                        <div>
-                            <p className="font-bold text-lg text-text-primary">{user.name}</p>
-                            <p className="text-text-secondary text-xs">{user.role === 'owner' ? 'Dono' : 'Criador'}</p>
-                        </div>
-                    </div>
-
-                    <nav className="flex-1 flex flex-col">
-                         {navItems.map(item => (
-                            <button 
-                                key={item.screen} 
-                                onClick={() => setScreen(item.screen)}
-                                className={`w-full text-left p-2.5 rounded-lg font-semibold text-base transition-colors mb-1 ${
-                                    currentScreen === item.screen ? 'text-accent-primary' : 'text-text-secondary hover:bg-bg-tertiary'
-                                }`}
-                            >
-                                {item.label}
-                            </button>
-                        ))}
-                    </nav>
-                    
-                    <div className="border-t border-bg-tertiary my-2"></div>
-                    
-                    <button onClick={() => setScreen('profile')} className={`w-full text-left p-2.5 rounded-lg font-semibold text-base transition-colors mt-1 ${ currentScreen === 'profile' ? 'text-accent-primary' : 'text-text-secondary hover:bg-bg-tertiary' }`}>
-                        Perfil
-                    </button>
-                     <button onClick={handleLogout} className="w-full text-left p-2.5 rounded-lg font-semibold text-base text-red-500 hover:bg-red-500/10 transition-colors">
-                        Sair
-                    </button>
-                </motion.div>
-                </>
-            )}
-        </AnimatePresence>
-    );
-};
-
-const NotificationsPanel: React.FC<{ user: AppUser, onClose: () => void }> = ({ user, onClose }) => {
-    const [requests] = useLocalStorage<{ userId: number, userName: string }[]>('oyasify-supporter-requests', []);
-    const [globalNotification] = useLocalStorage<{ message: string | null }>('oyasify-global-notification', { message: null });
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute top-16 right-4 w-72 bg-bg-secondary rounded-lg shadow-lg z-30 p-3"
-        >
-            <h3 className="font-bold text-base mb-2">Notificações</h3>
-            <div className="space-y-2">
-                {globalNotification.message && (
-                    <div className="text-xs bg-bg-tertiary p-2 rounded-md">{globalNotification.message}</div>
-                )}
-                {user.role === 'owner' && requests.map(req => (
-                    <div key={req.userId} className="text-xs bg-bg-tertiary p-2 rounded-md">
-                        <span className="font-bold">{req.userName}</span> quer se tornar um Apoiador!
-                    </div>
-                ))}
-                {(requests.length === 0 && !globalNotification.message) && (
-                    <p className="text-xs text-text-secondary">Nenhuma notificação nova.</p>
-                )}
-            </div>
-        </motion.div>
-    );
-};
-
-const BottomNav: React.FC<{ currentScreen: Screen, setScreen: (s: Screen) => void }> = ({ currentScreen, setScreen }) => {
-    const navItems = [
-        { screen: 'home', icon: Home },
-        { screen: 'vocal', icon: Mic },
-        { screen: 'ai-script', icon: Sparkles },
-        { screen: 'profile', icon: UserIcon },
-    ] as const;
-
-    return (
-        <nav className="fixed bottom-0 left-0 right-0 h-16 bg-bg-secondary flex justify-around items-center border-t border-bg-tertiary z-20">
-            {navItems.map(({ screen, icon: Icon }) => (
-                <motion.button
-                    key={screen}
-                    onClick={() => setScreen(screen)}
-                    className="flex flex-col items-center justify-center w-full h-full relative"
-                    whileTap={{ scale: 0.9 }}
-                >
-                    <Icon size={28} className={currentScreen === screen ? 'text-accent-primary' : 'text-gray-400'} strokeWidth={currentScreen === screen ? 2.5 : 2} />
-                </motion.button>
-            ))}
-        </nav>
-    );
-};
-
-
-// --- Application ---
-const Application: React.FC<{ user: AppUser, onLogout: () => void }> = ({ user, onLogout }) => {
-    const [users, setUsers] = useLocalStorage<(AppUser & { password?: string })[]>('oyasify-users', []);
-    const [session, setSession] = useLocalStorage<{ user: AppUser }>('oyasify-session', { user });
-
-    const [screen, setScreen] = useState<Screen>('home');
-    const [isDrawerOpen, setDrawerOpen] = useState(false);
-    const [notification, setNotification] = useState<string | null>(null);
-    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-    const [globalNotification, setGlobalNotification] = useLocalStorage('oyasify-global-notification', { message: null, seen: true });
-    
-    const showNotification = (message: string) => {
-        playSound('notification');
-        setNotification(message);
-        setTimeout(() => setNotification(null), 3000);
-    };
-    
-    useEffect(() => {
-        if (globalNotification.message && !globalNotification.seen) {
-            showNotification(globalNotification.message);
-            setGlobalNotification({ ...globalNotification, seen: true });
-        }
-    }, [globalNotification, setGlobalNotification]);
-
-    const handleSetScreen = (s: Screen) => {
-        playSound('click');
-        setScreen(s);
-        setDrawerOpen(false);
-    };
-    
-    const handleUpdateUser = (updatedUser: AppUser) => {
-       setSession({ user: updatedUser });
-       const userIndex = users.findIndex(u => u.id === updatedUser.id);
-       if (userIndex > -1) {
-           const newUsers = [...users];
-           const existingUser = newUsers[userIndex];
-           newUsers[userIndex] = { ...existingUser, ...updatedUser };
-           setUsers(newUsers);
-       }
-    };
-
-    return (
-        <div className="h-screen w-screen flex flex-col md:flex-row overflow-hidden">
-            <AnimatePresence>
-                {notification && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -50, x: '-50%' }}
-                        animate={{ opacity: 1, y: 20, x: '-50%' }}
-                        exit={{ opacity: 0, y: -50, x: '-50%' }}
-                        className="fixed top-0 left-1/2 z-50 bg-accent-primary text-white py-1.5 px-5 rounded-full shadow-lg text-sm"
-                    >
-                        {notification}
-                    </motion.div>
-                )}
-            </AnimatePresence>
-            
-            <Drawer user={session.user} isOpen={isDrawerOpen} setOpen={setDrawerOpen} setScreen={handleSetScreen} onLogout={onLogout} currentScreen={screen} />
-            <div className="flex-1 flex flex-col min-w-0">
-                <Header 
-                    onMenuClick={() => { playSound('click'); setDrawerOpen(true); }} 
-                    onNotificationsClick={() => { playSound('click'); setIsNotificationsOpen(!isNotificationsOpen); }}
-                    user={session.user} 
-                />
-                 <AnimatePresence>
-                    {isNotificationsOpen && <NotificationsPanel user={session.user} onClose={() => setIsNotificationsOpen(false)} />}
-                </AnimatePresence>
-                <MainContent screen={screen} user={session.user} setUser={handleUpdateUser} showNotification={showNotification} setScreen={handleSetScreen} />
-                <BottomNav currentScreen={screen} setScreen={handleSetScreen} />
-            </div>
-        </div>
-    );
-};
-
-// --- Main App Component ---
-const App: React.FC = () => {
-    const [session, setSession] = useLocalStorage<{ user: AppUser } | null>('oyasify-session', null);
-    const [view, setView] = useState<'welcome' | 'auth'>('welcome');
-    const themeKey = session?.user?.theme || 'oceano';
-
-    const handleLogout = () => {
-        setSession(null);
-        setView('welcome');
-    };
-
-    return (
-        <ThemeProvider initialThemeKey={themeKey}>
-            {session ? (
-                <Application user={session.user} onLogout={handleLogout} />
-            ) : (
-                view === 'welcome' ? (
-                    <WelcomeScreen onStart={() => setView('auth')} />
-                ) : (
-                    <Auth onLogin={setSession} />
-                )
-            )}
-        </ThemeProvider>
-    );
-};
-
-export default App;
+                                 <img src={lesson.thumbnailUrl}

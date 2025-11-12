@@ -21,9 +21,10 @@ export interface Friend extends User {
 
 export interface Message {
   id: number;
-  type: 'text' | 'image' | 'video' | 'audio';
+  type: 'text' | 'image' | 'video' | 'audio' | 'system';
   content?: string;
   mediaUrl?: string;
+  imageAttachments?: string[];
   senderId: number | 'me' | 'ai';
   timestamp: string;
   duration?: number;
@@ -41,6 +42,7 @@ export interface Theme {
 export interface Chat {
   friendId: number;
   messages: Message[];
+  isAiActive?: boolean;
 }
 
 export interface AcademyLesson {

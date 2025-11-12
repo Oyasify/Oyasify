@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -8,10 +6,10 @@ import {
 import { 
     THEMES, initialFriends, chats as initialChats, ACADEMY_LESSONS, initialUsersForDiscovery, OWNER_CREDENTIALS 
 } from './constants';
-import { generateScript, chatWithOyasifyAI } from './services/geminiService';
+import { generateScript, chatWithOyasifyAI, generateImageWithOyasifyAI } from './services/geminiService';
 import { 
     Home, Mic, User as UserIcon, GraduationCap, Send, Plus, Paperclip, LogOut,
-    X, Bell, Palette, Download, Link as LinkIcon, Heart, Shield, Crown, Flower2, Rocket, Sparkles, Pencil, MessageSquare, Droplet, Flame, Gem, Leaf, MicOff, Play, Pause, Check, Users, Search
+    X, Bell, Palette, Download, Link as LinkIcon, Heart, Shield, Crown, Flower2, Rocket, Sparkles, Pencil, MessageSquare, Droplet, Flame, Gem, Leaf, MicOff, Play, Pause, Check, Users, Search, Phone
 } from 'lucide-react';
 
 // --- Local Storage Hooks ---
@@ -21,7 +19,7 @@ const useLocalStorage = <T,>(key: string, initialValue: T): [T, (value: T | ((va
             const item = window.localStorage.getItem(key);
             return item ? JSON.parse(item) : initialValue;
         } catch (error) {
-            // FIX: Cast caught error to 'any' for console.error.
+            // Fix: The caught error is of type 'unknown'. Cast to 'any' to log it.
             console.error(error as any);
             return initialValue;
         }
@@ -33,7 +31,7 @@ const useLocalStorage = <T,>(key: string, initialValue: T): [T, (value: T | ((va
             setStoredValue(valueToStore);
             window.localStorage.setItem(key, JSON.stringify(valueToStore));
         } catch (error) {
-            // FIX: Cast caught error to 'any' for console.error.
+            // Fix: The caught error is of type 'unknown'. Cast to 'any' to log it.
             console.error(error as any);
         }
     };
@@ -63,7 +61,7 @@ const playSound = (type: 'click' | 'notification' | 'sent' | 'start_recording' |
     let soundFile: string;
     switch (type) {
         case 'notification':
-            soundFile = 'data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZ4KSYXgA837/3wMRgBwA9A4+BsDP/y//4wMQaAEMAwwDEYEyP/DAAFFQz/wAY709//5x//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//-AANCLAmp96AAAADAAAAABhAAQN+8AAAACgAAATEFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTAAAAAAEAAANIAAD+AAAQAAAAAEgAAAAAAAAAEhQAAQAAAAAAAAAEAAADgAABAAAAAAAAAAAAAAA';
+            soundFile = 'data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZ4KSYXgA837/3wMRgBwA9A4+BsDP/y//4wMQaAEMAwwDEYEyP/DAAFFQz/wAY709//5x//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//-AANCLAmp96AAAADAAAAABhAAQN+8AAAACgAAATEFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTAAAAAAEAAANIAAD+AAAQAAAAAEgAAAAAAAAAEhQAAQAAAAAAAAAEAAADgAABAAAAAAAAAAAAAAA';
             break;
         case 'click':
         case 'sent':
@@ -73,7 +71,9 @@ const playSound = (type: 'click' | 'notification' | 'sent' | 'start_recording' |
             soundFile = 'data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZ4JFdpKgdHVkXY8gAR//LgAAAAAAAAAAAABQTEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV-AAVERpqgA9QAL/8AAB//4gAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
             break;
     }
-    // FIX: Explicitly cast the error object to a string for logging to prevent type errors with strict settings.
+    // Fix: The error object from a promise rejection is of type `unknown`.
+    // Cast to 'any' to allow logging with console.error.
+    // FIX: The error is of type unknown. Explicitly cast it to a string for logging to resolve the type error.
     new Audio(soundFile).play().catch(e => console.error('Error playing sound:', String(e)));
 };
 
@@ -280,6 +280,45 @@ const Modal: React.FC<{ title: string, children: React.ReactNode, onClose: () =>
     </motion.div>
 );
 
+const ImageViewerModal: React.FC<{ imageUrl: string, onClose: () => void }> = ({ imageUrl, onClose }) => {
+    const handleDownload = () => {
+        const link = document.createElement('a');
+        link.href = imageUrl;
+        link.download = `oyasify-ai-image-${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+            onClick={onClose}
+        >
+            <motion.div 
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0.9 }}
+                className="relative max-w-4xl max-h-[90vh]"
+                onClick={e => e.stopPropagation()}
+            >
+                <img src={imageUrl} alt="Generated content" className="object-contain w-full h-full rounded-lg" />
+                <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 flex gap-4">
+                    <motion.button whileTap={{scale:0.95}} onClick={handleDownload} className="p-2.5 bg-accent-primary text-white rounded-full shadow-lg">
+                        <Download size={20} />
+                    </motion.button>
+                    <motion.button whileTap={{scale:0.95}} onClick={onClose} className="p-2.5 bg-danger text-white rounded-full shadow-lg">
+                        <X size={20} />
+                    </motion.button>
+                </div>
+            </motion.div>
+        </motion.div>
+    );
+};
+
 const AudioPlayer: React.FC<{ src: string; isMe: boolean }> = ({ src, isMe }) => {
     const audioRef = useRef<HTMLAudioElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -354,7 +393,7 @@ const ChatInput: React.FC<{ onSendMessage: (msg: Message) => void }> = ({ onSend
                 mediaRecorderRef.current.start();
                 setIsRecording(true);
             } catch (err) {
-                // FIX: Cast caught error to 'any' for console.error.
+                // Fix: The caught error is of type 'unknown'. Cast to 'any' to log it.
                 console.error("Error starting recording:", err as any);
             }
         }
@@ -395,9 +434,17 @@ const ChatInput: React.FC<{ onSendMessage: (msg: Message) => void }> = ({ onSend
     );
 };
 
-const ChatBubble: React.FC<{ message: Message }> = ({ message }) => {
+const ChatBubble: React.FC<{ message: Message; onImageClick?: (url: string) => void }> = ({ message, onImageClick }) => {
     const isMe = message.senderId === 'me';
     const isAI = message.senderId === 'ai';
+
+    if (message.type === 'system') {
+        return (
+            <div className="text-center text-xs text-text-secondary py-2">
+                {message.content}
+            </div>
+        );
+    }
 
     return (
         <motion.div 
@@ -406,8 +453,15 @@ const ChatBubble: React.FC<{ message: Message }> = ({ message }) => {
             className={`flex items-end gap-2 ${isMe ? 'justify-end' : 'justify-start'}`}>
             {isAI && <LogoIcon className="text-accent-primary h-6 w-6 flex-shrink-0 mb-1" />}
             <div className={`max-w-[80%] md:max-w-[70%] p-3 rounded-2xl text-sm ${isMe ? 'bg-accent-primary text-white rounded-br-lg' : 'bg-bg-tertiary rounded-bl-lg'}`}>
-                 {message.type === 'text' && <p className="break-words">{message.content}</p>}
-                 {message.type === 'image' && <img src={message.mediaUrl} alt="media content" className="rounded-lg max-w-full h-auto" />}
+                 {message.imageAttachments && message.imageAttachments.length > 0 && (
+                    <div className={`grid gap-1.5 ${message.imageAttachments.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                        {message.imageAttachments.map((url, index) => (
+                            <img key={index} src={url} alt={`attachment ${index + 1}`} className="rounded-lg max-w-full h-auto" />
+                        ))}
+                    </div>
+                 )}
+                 {message.type === 'text' && message.content && <p className={`break-words ${message.imageAttachments && message.imageAttachments.length > 0 ? 'mt-2' : ''}`}>{message.content}</p>}
+                 {message.type === 'image' && <img onClick={() => onImageClick && message.mediaUrl && onImageClick(message.mediaUrl)} src={message.mediaUrl} alt="media content" className={`rounded-lg max-w-full h-auto ${onImageClick ? 'cursor-pointer' : ''}`} />}
                  {message.type === 'video' && <video src={message.mediaUrl} controls className="rounded-lg max-w-full" />}
                  {message.type === 'audio' && message.mediaUrl && <AudioPlayer src={message.mediaUrl} isMe={isMe} />}
             </div>
@@ -579,6 +633,7 @@ const AiScriptScreen = () => {
             const result = await generateScript(idea);
             setScript(result);
         } catch (error) {
+            // Fix: The caught error is of type 'unknown'. Cast to 'any' to log it.
             console.error(error as any);
             setScript("<h2>Erro</h2><p>Algo deu errado. Por favor, verifique o console para mais detalhes.</p>");
         }
@@ -588,14 +643,14 @@ const AiScriptScreen = () => {
     return (
         <div className="max-w-2xl mx-auto flex flex-col items-center">
             <h1 className="text-3xl font-bold mb-1 text-text-primary flex items-center gap-2"><Sparkles className="text-accent-primary" />Roteiro AI</h1>
-            <p className="text-text-secondary mb-6 text-center max-w-lg text-base">Gere roteiros criativos e envolventes para seus vídeos, músicas ou qualquer conteúdo.</p>
+            <p className="text-text-secondary mb-6 text-center max-w-lg text-base">Gere roteiros criativos para seus vídeos, seja para YouTube, TikTok ou outra plataforma.</p>
             
             <Card className="w-full p-6">
                 <label className="font-semibold text-text-primary mb-2 block text-base">Sua Ideia para o Roteiro</label>
                 <textarea
                     value={idea}
                     onChange={(e) => setIdea(e.target.value)}
-                    placeholder="Ex: Um roteiro para um vídeo de YouTube sobre dicas de canto para iniciantes, com duração de 5 minutos."
+                    placeholder="Ex: um roteiro para um vídeo no TikTok sobre 3 dicas para viajar barato."
                     className="w-full h-32 p-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-primary resize-none text-text-primary text-sm"
                 />
                 <motion.button
@@ -745,8 +800,9 @@ const ApoioScreen: React.FC<{ user: AppUser, showNotification: (msg: string) => 
     );
 };
 
-const AIChatInput: React.FC<{ onSendMessage: (text: string) => void; isLoading: boolean }> = ({ onSendMessage, isLoading }) => {
+const AIChatInput: React.FC<{ onSendMessage: (text: string) => void; isLoading: boolean; onAddImages: (files: FileList | null) => void; }> = ({ onSendMessage, isLoading, onAddImages }) => {
     const [text, setText] = useState('');
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleSend = () => {
         if (!text.trim() || isLoading) return;
@@ -756,12 +812,26 @@ const AIChatInput: React.FC<{ onSendMessage: (text: string) => void; isLoading: 
 
     return (
         <div className="flex-shrink-0 p-2 border-t border-bg-tertiary flex items-center gap-2">
+            <motion.button whileTap={{ scale: 0.9 }} onClick={() => fileInputRef.current?.click()} className="p-2.5 rounded-full hover:bg-bg-tertiary text-text-secondary">
+                <Paperclip size={22} />
+            </motion.button>
+            <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={(e) => {
+                    onAddImages(e.target.files);
+                    if(e.target) e.target.value = ''; // Reset file input to allow selecting the same file again
+                }} 
+                className="hidden" 
+                accept="image/*" 
+                multiple 
+            />
             <input 
                 type="text" 
                 value={text} 
                 onChange={e => setText(e.target.value)} 
                 onKeyDown={e => e.key === 'Enter' && handleSend()} 
-                placeholder="Digite sua pergunta aqui..." 
+                placeholder="Pergunte ou use /gerar <prompt>" 
                 className="flex-1 bg-bg-tertiary p-2.5 rounded-full outline-none px-4 text-sm"
                 disabled={isLoading}
             />
@@ -769,7 +839,7 @@ const AIChatInput: React.FC<{ onSendMessage: (text: string) => void; isLoading: 
                 whileTap={{ scale: 0.9 }} 
                 onClick={handleSend} 
                 className="p-2.5 rounded-full bg-accent-primary text-white disabled:bg-bg-tertiary"
-                disabled={isLoading}
+                disabled={isLoading || !text.trim()}
             >
                 <Send size={22} />
             </motion.button>
@@ -777,38 +847,80 @@ const AIChatInput: React.FC<{ onSendMessage: (text: string) => void; isLoading: 
     );
 };
 
-const OyasifyAIScreen: React.FC = () => {
+const OyasifyAIScreen: React.FC<{onImageClick: (url: string) => void}> = ({onImageClick}) => {
     const [messages, setMessages] = useState<Message[]>([
-        { id: 0, type: 'text', senderId: 'ai', content: 'Olá! Eu sou o Oyasify AI. Como posso te ajudar a criar algo incrível hoje?', timestamp: '' }
+        { id: 0, type: 'text', senderId: 'ai', content: 'Olá! Eu sou o Oyasify AI. Posso te ajudar com ideias, responder perguntas e até gerar imagens! Use /gerar <sua ideia>.', timestamp: '' }
     ]);
     const [isLoading, setIsLoading] = useState(false);
+    const [pendingImages, setPendingImages] = useState<{data: string; mimeType: string; name: string}[]>([]);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
+    const handleImageSelection = (files: FileList | null) => {
+        if (!files) return;
+        const fileArray = Array.from(files);
+        
+        fileArray.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const base64Data = (e.target?.result as string)?.split(',')[1];
+                if (base64Data) {
+                    setPendingImages(prev => [...prev, {
+                        data: base64Data,
+                        mimeType: file.type,
+                        name: file.name,
+                    }]);
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
     const handleSendMessage = async (text: string) => {
         const userMessage: Message = {
             id: Date.now(),
             type: 'text',
             content: text,
+            imageAttachments: pendingImages.map(p => `data:${p.mimeType};base64,${p.data}`),
             senderId: 'me',
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
         setMessages(prev => [...prev, userMessage]);
+        
+        const imagesToSend = [...pendingImages];
+        setPendingImages([]); // Clear previews immediately
         setIsLoading(true);
 
-        const aiResponse = await chatWithOyasifyAI(text);
-
-        const aiMessage: Message = {
-            id: Date.now() + 1,
-            type: 'text',
-            content: aiResponse,
-            senderId: 'ai',
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-        setMessages(prev => [...prev, aiMessage]);
+        // Check for image generation command
+        const imagePrompt = text.toLowerCase().startsWith('/gerar ') ? text.substring(7) : text.toLowerCase().startsWith('/imagine ') ? text.substring(9) : null;
+        
+        if (imagePrompt) {
+            const imageData = await generateImageWithOyasifyAI(imagePrompt);
+            const aiMessage: Message = {
+                id: Date.now() + 1,
+                senderId: 'ai',
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                ...(imageData 
+                    ? { type: 'image', mediaUrl: `data:image/png;base64,${imageData}` }
+                    : { type: 'text', content: 'Desculpe, não consegui gerar a imagem. Tente novamente.' }
+                )
+            };
+            setMessages(prev => [...prev, aiMessage]);
+        } else {
+            const aiResponse = await chatWithOyasifyAI(text, imagesToSend);
+            const aiMessage: Message = {
+                id: Date.now() + 1,
+                type: 'text',
+                content: aiResponse,
+                senderId: 'ai',
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+            setMessages(prev => [...prev, aiMessage]);
+        }
+        
         setIsLoading(false);
     };
 
@@ -817,7 +929,7 @@ const OyasifyAIScreen: React.FC = () => {
             <h1 className="text-2xl font-bold text-center text-text-primary mb-3 flex-shrink-0">Oyasify AI</h1>
             <div className="flex-1 flex flex-col bg-bg-secondary rounded-2xl shadow-md overflow-hidden">
                 <div className="flex-1 p-3 overflow-y-auto space-y-3 overscroll-contain">
-                    {messages.map(msg => <ChatBubble key={msg.id} message={msg} />)}
+                    {messages.map(msg => <ChatBubble key={msg.id} message={msg} onImageClick={onImageClick} />)}
                     {isLoading && (
                         <motion.div className="flex items-end gap-2 justify-start">
                              <LogoIcon className="text-accent-primary h-6 w-6 flex-shrink-0 mb-1" />
@@ -830,32 +942,260 @@ const OyasifyAIScreen: React.FC = () => {
                     )}
                     <div ref={messagesEndRef} />
                 </div>
-                <AIChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+                {pendingImages.length > 0 && (
+                    <div className="p-2 border-t border-bg-tertiary bg-bg-secondary/50">
+                        <div className="flex flex-wrap gap-2">
+                        {pendingImages.map((img, index) => (
+                            <div key={`${img.name}-${index}`} className="relative">
+                                <img src={`data:${img.mimeType};base64,${img.data}`} alt={img.name} className="h-16 w-16 object-cover rounded-md" />
+                                <motion.button whileTap={{scale: 0.9}} onClick={() => setPendingImages(p => p.filter((_, i) => i !== index))} className="absolute -top-1 -right-1 bg-danger text-white rounded-full p-0.5 shadow-md">
+                                    <X size={12} />
+                                </motion.button>
+                            </div>
+                        ))}
+                        </div>
+                    </div>
+                )}
+                <AIChatInput onSendMessage={handleSendMessage} isLoading={isLoading} onAddImages={handleImageSelection} />
             </div>
         </div>
     );
 };
 
+const AudioCallModal: React.FC<{
+    friend: Friend;
+    onClose: () => void;
+}> = ({ friend, onClose }) => {
+    const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+    const localStreamRef = useRef<MediaStream | null>(null);
+    const remoteAudioRef = useRef<HTMLAudioElement>(null);
 
-const ChatView: React.FC<{ friend: Friend, chat: Chat, onBack: () => void, onSendMessage: (msg: Message) => void }> = ({ friend, chat, onBack, onSendMessage }) => {
+    const [audioInputDevices, setAudioInputDevices] = useState<MediaDeviceInfo[]>([]);
+    const [audioOutputDevices, setAudioOutputDevices] = useState<MediaDeviceInfo[]>([]);
+    const [selectedAudioInput, setSelectedAudioInput] = useState('');
+    const [selectedAudioOutput, setSelectedAudioOutput] = useState('');
+    const [callStatus, setCallStatus] = useState('idle'); // idle, calling, connected, ended
+
+    // Setup devices
+    useEffect(() => {
+        const setupDevices = async () => {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const audioIn = devices.filter(d => d.kind === 'audioinput');
+                const audioOut = devices.filter(d => d.kind === 'audiooutput');
+                setAudioInputDevices(audioIn);
+                setAudioOutputDevices(audioOut);
+                if (audioIn.length > 0) setSelectedAudioInput(audioIn[0].deviceId);
+                if (audioOut.length > 0) setSelectedAudioOutput(audioOut[0].deviceId);
+// Fix: The caught error `e` is of type `unknown`. Cast to `any` to allow logging with console.error, ensuring consistency with other error handlers in the file.
+            } catch (e) { console.error("Error enumerating devices:", e as any); }
+        };
+        setupDevices();
+    }, []);
+    
+    // Get microphone stream
+    useEffect(() => {
+        const getMedia = async () => {
+            if (!selectedAudioInput) return;
+            try {
+                if (localStreamRef.current) {
+                    localStreamRef.current.getTracks().forEach(track => track.stop());
+                }
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: { deviceId: { exact: selectedAudioInput } },
+                });
+                localStreamRef.current = stream;
+            } catch (e) { 
+                console.error("Error getting user media:", e as any); 
+            }
+        };
+        getMedia();
+    }, [selectedAudioInput]);
+
+    // Set speaker output
+    useEffect(() => {
+        const setSink = async () => {
+            if (remoteAudioRef.current && selectedAudioOutput && 'setSinkId' in remoteAudioRef.current) {
+                try {
+                    await (remoteAudioRef.current as any).setSinkId(selectedAudioOutput);
+// Fix: The caught error `e` is of type `unknown`. Cast to `any` to allow logging with console.error, ensuring consistency with other error handlers in the file.
+                } catch (e) { console.error('Error setting sink ID:', e as any); }
+            }
+        };
+        setSink();
+    }, [selectedAudioOutput]);
+
+
+    const setupPeerConnection = () => {
+        const pc = new RTCPeerConnection();
+        peerConnectionRef.current = pc;
+
+        pc.onicecandidate = event => {
+            if (event.candidate) {
+                // In a real app, this candidate is sent to the other peer via signaling server
+                console.log("[SIGNALLING] Send this candidate to peer:", event.candidate);
+            }
+        };
+
+        pc.ontrack = event => {
+            if (remoteAudioRef.current) {
+                remoteAudioRef.current.srcObject = event.streams[0];
+            }
+        };
+
+        localStreamRef.current?.getTracks().forEach(track => {
+            pc.addTrack(track, localStreamRef.current!);
+        });
+
+        pc.onconnectionstatechange = () => {
+            if (pc.connectionState === 'connected') setCallStatus('connected');
+            if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) hangup();
+        };
+        return pc;
+    }
+
+    const callFriend = async () => {
+        if (!localStreamRef.current) return alert("Microfone não disponível.");
+        setCallStatus('calling');
+        const pc = setupPeerConnection();
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        
+        // --- SIMULATED SIGNALING ---
+        console.log(`[SIGNALLING] Send this offer to friend ${friend.id}:`, offer);
+        const answerString = prompt("Chamada iniciada! Envie a 'offer' (no console) para seu amigo. Cole a 'answer' dele aqui:");
+        if (answerString) {
+            const answer = JSON.parse(answerString);
+            await pc.setRemoteDescription(new RTCSessionDescription(answer));
+        }
+    };
+
+    const answerCall = async () => {
+        // --- SIMULATED SIGNALING ---
+        const offerString = prompt("Para atender, cole a 'offer' do seu amigo aqui:");
+        if (!offerString || !localStreamRef.current) return;
+
+        setCallStatus('calling');
+        const pc = setupPeerConnection();
+        const offer = JSON.parse(offerString);
+        await pc.setRemoteDescription(new RTCSessionDescription(offer));
+        
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+
+        console.log("[SIGNALLING] Send this answer to the caller:", answer);
+        alert("Resposta criada e logada no console. Envie para o seu amigo.");
+    };
+
+    const hangup = () => {
+        if (peerConnectionRef.current) {
+            peerConnectionRef.current.close();
+            peerConnectionRef.current = null;
+        }
+        localStreamRef.current?.getTracks().forEach(track => track.stop());
+        setCallStatus('ended');
+        setTimeout(onClose, 1000);
+    };
+
+    return (
+        <Modal title={`Chamada com ${friend.name}`} onClose={onClose}>
+            <div className="flex flex-col items-center justify-center p-4">
+                <audio ref={remoteAudioRef} autoPlay />
+                <img src={friend.avatarUrl} alt={friend.name} className="w-24 h-24 rounded-full mb-4" />
+                <p className="font-bold text-lg">{friend.name}</p>
+                <p className="text-text-secondary capitalize text-sm">{callStatus === 'idle' ? 'Pronto para chamar' : callStatus}</p>
+            </div>
+            
+            <div className="space-y-2 text-sm">
+                <div>
+                    <label className="block text-text-secondary mb-1">Microfone:</label>
+                    <select value={selectedAudioInput} onChange={e => setSelectedAudioInput(e.target.value)} className="w-full p-2 bg-bg-tertiary rounded-md focus:outline-none ring-accent-primary focus:ring-2">
+                        {audioInputDevices.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label || `Microfone ${d.deviceId.substring(0,6)}`}</option>)}
+                    </select>
+                </div>
+                <div>
+                    <label className="block text-text-secondary mb-1">Alto-falante/Fone:</label>
+                    <select value={selectedAudioOutput} onChange={e => setSelectedAudioOutput(e.target.value)} className="w-full p-2 bg-bg-tertiary rounded-md focus:outline-none ring-accent-primary focus:ring-2">
+                        {audioOutputDevices.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label || `Saída ${d.deviceId.substring(0,6)}`}</option>)}
+                    </select>
+                </div>
+            </div>
+            <div className="mt-4 flex gap-3">
+                <motion.button whileTap={{scale:0.95}} onClick={callFriend} disabled={callStatus !== 'idle'} className="flex-1 p-2.5 bg-green-500 text-white rounded-lg font-semibold disabled:bg-gray-400">Ligar</motion.button>
+                <motion.button whileTap={{scale:0.95}} onClick={answerCall} disabled={callStatus !== 'idle'} className="flex-1 p-2.5 bg-blue-500 text-white rounded-lg font-semibold disabled:bg-gray-400">Atender</motion.button>
+                <motion.button whileTap={{scale:0.95}} onClick={hangup} disabled={callStatus === 'idle' || callStatus === 'ended'} className="flex-1 p-2.5 bg-danger text-white rounded-lg font-semibold disabled:bg-gray-400">Desligar</motion.button>
+            </div>
+             <p className="text-xs text-text-secondary text-center mt-2">Esta é uma demonstração. A sinalização é simulada via prompts.</p>
+        </Modal>
+    );
+};
+
+
+const ChatView: React.FC<{ friend: Friend, chat: Chat, onBack: () => void, onUpdateChat: (chat: Chat) => void, onStartAudioCall: (friend: Friend) => void, onImageClick: (url: string) => void }> = ({ friend, chat, onBack, onUpdateChat, onStartAudioCall, onImageClick }) => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [chat.messages]);
     
+    const handleSendMessage = async (newMessage: Message) => {
+        // Optimistically add user message
+        const updatedChatWithUserMsg = { ...chat, messages: [...chat.messages, newMessage] };
+        onUpdateChat(updatedChatWithUserMsg);
+    
+        const content = newMessage.content?.toLowerCase() || '';
+        let currentChatState = { ...updatedChatWithUserMsg };
+    
+        const triggerAI = content.includes('@oyasifyai');
+        const stopAI = content === '/parar';
+    
+        if (stopAI && chat.isAiActive) {
+            const systemMessage: Message = { id: Date.now() + 1, type: 'system', content: 'Oyasify AI saiu do chat.', senderId: 'ai', timestamp: '' };
+            currentChatState = { ...currentChatState, isAiActive: false, messages: [...currentChatState.messages, systemMessage] };
+            onUpdateChat(currentChatState);
+            return;
+        }
+    
+        let shouldQueryAI = (chat.isAiActive && !stopAI) || triggerAI;
+    
+        if (shouldQueryAI) {
+            if(triggerAI && !chat.isAiActive) {
+                const systemMessage: Message = { id: Date.now() + 1, type: 'system', content: 'Oyasify AI entrou no chat.', senderId: 'ai', timestamp: '' };
+                currentChatState = { ...currentChatState, messages: [...currentChatState.messages, systemMessage] };
+            }
+
+            const messageForAI = newMessage.content?.replace(/@oyasifyai/gi, '').trim() || '';
+            const aiResponseText = await chatWithOyasifyAI(messageForAI, []);
+            const aiMessage: Message = {
+                id: Date.now() + 2,
+                type: 'text',
+                content: aiResponseText,
+                senderId: 'ai',
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+            currentChatState = { ...currentChatState, isAiActive: true, messages: [...currentChatState.messages, aiMessage] };
+            onUpdateChat(currentChatState);
+        }
+    };
+
     return (
         <div className="h-full flex flex-col bg-bg-secondary rounded-2xl shadow-md">
             <header className="flex-shrink-0 flex items-center p-2.5 border-b border-bg-tertiary">
                 <motion.button whileTap={{scale:0.9}} onClick={() => { playSound('click'); onBack(); }} className="mr-2 p-2 rounded-full hover:bg-bg-tertiary text-text-secondary">&larr;</motion.button>
                 <img src={friend.avatarUrl} className="w-9 h-9 rounded-full" />
-                <h2 className="font-bold ml-3 text-base">{friend.name}</h2>
+                <div className="ml-3 flex-1">
+                    <h2 className="font-bold text-base leading-tight">{friend.name}</h2>
+                    {chat.isAiActive && <p className="text-xs text-accent-primary font-semibold leading-tight flex items-center gap-1"><Sparkles size={12}/> AI Ativa</p>}
+                </div>
+                <motion.button whileTap={{scale:0.9}} onClick={() => { playSound('click'); onStartAudioCall(friend); }} className="p-2 rounded-full hover:bg-bg-tertiary text-text-secondary">
+                    <Phone size={20} />
+                </motion.button>
             </header>
             <div className="flex-1 p-3 overflow-y-auto space-y-3 overscroll-contain">
-                {chat.messages.map(msg => <ChatBubble key={msg.id} message={msg} />)}
+                {chat.messages.map(msg => <ChatBubble key={msg.id} message={msg} onImageClick={onImageClick} />)}
                 <div ref={messagesEndRef} />
             </div>
-             <ChatInput onSendMessage={onSendMessage} />
+             <ChatInput onSendMessage={handleSendMessage} />
         </div>
     );
 };
@@ -982,7 +1322,7 @@ const ProfileView: React.FC<{ user: AppUser, setUser: (user: AppUser) => void, s
 
 interface FriendRequest { from: User; toId: number; }
 
-const FriendsChatScreen: React.FC<{ currentUser: AppUser, showNotification: (msg: string) => void }> = ({ currentUser, showNotification }) => {
+const FriendsChatScreen: React.FC<{ currentUser: AppUser, showNotification: (msg: string) => void, onImageClick: (url: string) => void }> = ({ currentUser, showNotification, onImageClick }) => {
     const [view, setView] = useState<'chat' | 'list'>('list');
     const [friends, setFriends] = useLocalStorage<Friend[]>('oyasify-friends', initialFriends);
     const [chats, setChats] = useLocalStorage<Chat[]>('oyasify-chats', initialChats);
@@ -991,6 +1331,7 @@ const FriendsChatScreen: React.FC<{ currentUser: AppUser, showNotification: (msg
     const [friendRequests, setFriendRequests] = useLocalStorage<FriendRequest[]>('oyasify-requests', []);
     const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
     const [subView, setSubView] = useState<'friends' | 'requests' | 'add'>('friends');
+    const [audioCallFriend, setAudioCallFriend] = useState<Friend | null>(null);
 
     const incomingRequests = friendRequests.filter(req => req.toId === currentUser.id);
     const sentRequests = friendRequests.filter(req => req.from.id === currentUser.id);
@@ -1033,25 +1374,32 @@ const FriendsChatScreen: React.FC<{ currentUser: AppUser, showNotification: (msg
         showNotification(`Pedido de ${req.from.name} recusado.`);
     };
 
-    const handleSendMessage = (newMessage: Message) => {
+    const handleUpdateChat = (updatedChat: Chat) => {
         if (!selectedFriend) return;
-        const newChats = chats.map(c => 
-            c.friendId === selectedFriend.id 
-            ? { ...c, messages: [...c.messages, newMessage] } 
-            : c
-        );
-        setChats(newChats);
+        setChats(chats.map(c => c.friendId === selectedFriend.id ? updatedChat : c));
     };
     
     if (view === 'chat' && selectedFriend) {
         const chat = chats.find(c => c.friendId === selectedFriend.id);
         return (
-            <ChatView 
-                friend={selectedFriend} 
-                chat={chat!} 
-                onBack={() => setView('list')} 
-                onSendMessage={handleSendMessage}
-            />
+            <>
+                <AnimatePresence>
+                    {audioCallFriend && (
+                        <AudioCallModal 
+                            friend={audioCallFriend} 
+                            onClose={() => setAudioCallFriend(null)} 
+                        />
+                    )}
+                </AnimatePresence>
+                <ChatView 
+                    friend={selectedFriend} 
+                    chat={chat!} 
+                    onBack={() => setView('list')} 
+                    onUpdateChat={handleUpdateChat}
+                    onStartAudioCall={setAudioCallFriend}
+                    onImageClick={onImageClick}
+                />
+            </>
         );
     }
 
@@ -1158,7 +1506,7 @@ const FriendsChatScreen: React.FC<{ currentUser: AppUser, showNotification: (msg
     );
 };
 
-const ProfileScreen: React.FC<{ user: AppUser, setUser: (user: AppUser) => void, showNotification: (msg: string) => void }> = ({ user, setUser, showNotification }) => {
+const ProfileScreen: React.FC<{ user: AppUser, setUser: (user: AppUser) => void, showNotification: (msg: string) => void, onImageClick: (url: string) => void }> = ({ user, setUser, showNotification, onImageClick }) => {
     const [tab, setTab] = useState<'profile' | 'friends'>('profile');
     
     return (
@@ -1185,7 +1533,7 @@ const ProfileScreen: React.FC<{ user: AppUser, setUser: (user: AppUser) => void,
                         className="h-full"
                     >
                         {tab === 'profile' && <ProfileView user={user} setUser={setUser} showNotification={showNotification} />}
-                        {tab === 'friends' && <FriendsChatScreen currentUser={user} showNotification={showNotification}/>}
+                        {tab === 'friends' && <FriendsChatScreen currentUser={user} showNotification={showNotification} onImageClick={onImageClick} />}
                     </motion.div>
                 </AnimatePresence>
             </div>
@@ -1193,7 +1541,7 @@ const ProfileScreen: React.FC<{ user: AppUser, setUser: (user: AppUser) => void,
     );
 };
 
-const MainContent: React.FC<{ screen: Screen, user: AppUser, setUser: (user: AppUser) => void, showNotification: (msg: string) => void, setScreen: (s: Screen) => void }> = ({ screen, user, setUser, showNotification, setScreen }) => {
+const MainContent: React.FC<{ screen: Screen, user: AppUser, setUser: (user: AppUser) => void, showNotification: (msg: string) => void, setScreen: (s: Screen) => void, onImageClick: (url: string) => void }> = ({ screen, user, setUser, showNotification, setScreen, onImageClick }) => {
     return (
         <main className="flex-1 overflow-y-auto p-4 pb-20 overscroll-contain">
             <AnimatePresence mode="wait">
@@ -1208,10 +1556,10 @@ const MainContent: React.FC<{ screen: Screen, user: AppUser, setUser: (user: App
                     {screen === 'home' && <HomeScreen user={user} setScreen={setScreen} />}
                     {screen === 'vocal' && <VocalScreen />}
                     {screen === 'ai-script' && <AiScriptScreen />}
-                    {screen === 'profile' && <ProfileScreen user={user} setUser={setUser} showNotification={showNotification} />}
+                    {screen === 'profile' && <ProfileScreen user={user} setUser={setUser} showNotification={showNotification} onImageClick={onImageClick} />}
                     {screen === 'academy' && <AcademyScreen />}
                     {screen === 'apoio' && <ApoioScreen user={user} showNotification={showNotification} />}
-                    {screen === 'oyasify-ai' && <OyasifyAIScreen />}
+                    {screen === 'oyasify-ai' && <OyasifyAIScreen onImageClick={onImageClick} />}
                 </motion.div>
             </AnimatePresence>
         </main>
@@ -1372,6 +1720,7 @@ const Application: React.FC<{ user: AppUser, onLogout: () => void }> = ({ user, 
     const [notification, setNotification] = useState<string | null>(null);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [globalNotification, setGlobalNotification] = useLocalStorage('oyasify-global-notification', { message: null, seen: true });
+    const [viewingImage, setViewingImage] = useState<string | null>(null);
     
     const showNotification = (message: string) => {
         playSound('notification');
@@ -1416,6 +1765,7 @@ const Application: React.FC<{ user: AppUser, onLogout: () => void }> = ({ user, 
                         {notification}
                     </motion.div>
                 )}
+                 {viewingImage && <ImageViewerModal imageUrl={viewingImage} onClose={() => setViewingImage(null)} />}
             </AnimatePresence>
             
             <Drawer user={session.user} isOpen={isDrawerOpen} setOpen={setDrawerOpen} setScreen={handleSetScreen} onLogout={onLogout} currentScreen={screen} />
@@ -1428,7 +1778,7 @@ const Application: React.FC<{ user: AppUser, onLogout: () => void }> = ({ user, 
                  <AnimatePresence>
                     {isNotificationsOpen && <NotificationsPanel user={session.user} onClose={() => setIsNotificationsOpen(false)} />}
                 </AnimatePresence>
-                <MainContent screen={screen} user={session.user} setUser={handleUpdateUser} showNotification={showNotification} setScreen={handleSetScreen} />
+                <MainContent screen={screen} user={session.user} setUser={handleUpdateUser} showNotification={showNotification} setScreen={handleSetScreen} onImageClick={setViewingImage} />
                 <BottomNav currentScreen={screen} setScreen={handleSetScreen} />
             </div>
         </div>
