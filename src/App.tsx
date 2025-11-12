@@ -9,7 +9,7 @@ import {
 import { generateScript, chatWithOyasifyAI } from './services/geminiService';
 import { 
     Home, Mic, User as UserIcon, GraduationCap, Send, Plus, Paperclip, LogOut,
-    X, Bell, Palette, Download, Link as LinkIcon, Heart, Shield, Crown, Flower2, Rocket, Sparkles, Pencil, MessageSquare, Droplet, Flame, Gem, Leaf, MicOff, Play, Pause, Check, Users, Search, Phone
+    X, Bell, Palette, Download, Link as LinkIcon, Heart, Shield, Crown, Flower2, Rocket, Sparkles, Pencil, MessageSquare, Droplet, Flame, Gem, Leaf, MicOff, Play, Pause, Check, Users, Search, Phone, ClipboardCopy
 } from 'lucide-react';
 
 // --- Local Storage Hooks ---
@@ -19,8 +19,8 @@ const useLocalStorage = <T,>(key: string, initialValue: T): [T, (value: T | ((va
             const item = window.localStorage.getItem(key);
             return item ? JSON.parse(item) : initialValue;
         } catch (error) {
-            // Fix: The caught error is of type 'unknown'. Cast to 'any' to log it.
-            console.error(error as any);
+            // Fix: The caught error is of type 'unknown'. Cast to a string to log it.
+            console.error(String(error));
             return initialValue;
         }
     });
@@ -31,8 +31,8 @@ const useLocalStorage = <T,>(key: string, initialValue: T): [T, (value: T | ((va
             setStoredValue(valueToStore);
             window.localStorage.setItem(key, JSON.stringify(valueToStore));
         } catch (error) {
-            // Fix: The caught error is of type 'unknown'. Cast to 'any' to log it.
-            console.error(error as any);
+            // Fix: The caught error is of type 'unknown'. Cast to a string to log it.
+            console.error(String(error));
         }
     };
     return [storedValue, setValue];
@@ -61,20 +61,18 @@ const playSound = (type: 'click' | 'notification' | 'sent' | 'start_recording' |
     let soundFile: string;
     switch (type) {
         case 'notification':
-            soundFile = 'data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZ4KSYXgA837/3wMRgBwA9A4+BsDP/y//4wMQaAEMAwwDEYEyP/DAAFFQz/wAY709//5x//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//-AANCLAmp96AAAADAAAAABhAAQN+8AAAACgAAATEFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTAAAAAAEAAANIAAD+AAAQAAAAAEgAAAAAAAAAEhQAAQAAAAAAAAAEAAADgAABAAAAAAAAAAAAAAA';
+            soundFile = 'data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZ4KSYXgA837/3wMRgBwA9A4+BsDP/y//4wMQaAEMAwwDEYEyP/DAAFFQz/wAY709//5x//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//-AANCLAmp96AAAADAAAAABhAAQN+8AAAACgAAATEFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTAAAAAAEAAANIAAD/AAAQAAAAAEgAAAAAAAAAEhQAAQAAAAAAAAAEAAADgAABAAAAAAAAAAAAAAA';
             break;
         case 'click':
         case 'sent':
         case 'start_recording':
         case 'cancel_recording':
         default:
-            soundFile = 'data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZ4JFdpKgdHVkXY8gAR//LgAAAAAAAAAAAABQTEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV-AAVERpqgA9QAL/8AAB//4gAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
+            soundFile = 'data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZ4JFdpKgdHVkXY8gAR//LgAAAAAAAAAAAABQTEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV-AAVERpqgA9QAL/8AAB//4gAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
             break;
     }
-    // Fix: The error object from a promise rejection is of type `unknown`.
-    // Cast to 'any' to allow logging with console.error.
-    // FIX: The error is of type unknown. Explicitly cast it to a string for logging to resolve the type error.
-    new Audio(soundFile).play().catch(e => console.error('Error playing sound:', String(e)));
+    // FIX: Replaced multi-argument console.error with a template literal to ensure a single string argument, preventing potential type errors with strict linting rules.
+    new Audio(soundFile).play().catch(e => console.error(`Error playing sound: ${String(e)}`));
 };
 
 // --- New Logo Component ---
@@ -393,8 +391,9 @@ const ChatInput: React.FC<{ onSendMessage: (msg: Message) => void }> = ({ onSend
                 mediaRecorderRef.current.start();
                 setIsRecording(true);
             } catch (err) {
-                // Fix: The caught error is of type 'unknown'. Cast to 'any' to log it.
-                console.error("Error starting recording:", err as any);
+                // Fix: The caught error is of type 'unknown'. Cast to a string to log it.
+// FIX: Changed multi-argument console.error to a single template literal for consistency.
+                console.error(`Error starting recording: ${String(err)}`);
             }
         }
     };
@@ -613,7 +612,24 @@ const VocalScreen: React.FC = () => (
     </motion.div>
 );
 
-const AiScriptScreen = () => {
+const BecomeSupporterForScriptScreen: React.FC<{ setScreen: (s: Screen) => void }> = ({ setScreen }) => (
+    <div className="max-w-md mx-auto flex flex-col items-center text-center">
+        <h1 className="text-2xl font-bold mb-1 text-text-primary flex items-center gap-2"><Crown className="text-yellow-500" /> Acesso Exclusivo</h1>
+        <p className="text-text-secondary mb-4 text-sm">A funcionalidade Roteiro AI está disponível apenas para apoiadores.</p>
+        <Card className="w-full p-6 space-y-4">
+            <p className="text-text-secondary">Torne-se um apoiador para desbloquear esta e outras vantagens exclusivas e ajude a manter o projeto!</p>
+            <motion.button
+                onClick={() => setScreen('apoio')}
+                whileTap={{ scale: 0.98 }} whileHover={{ y: -2 }}
+                className="w-full bg-accent-primary text-white font-bold py-3 px-4 rounded-xl hover:bg-accent-secondary transition-colors text-base flex items-center justify-center gap-2"
+            >
+                <Heart size={20} /> Ver Vantagens de Apoiador
+            </motion.button>
+        </Card>
+    </div>
+);
+
+const AiScriptScreen: React.FC<{ user: AppUser; setScreen: (s: Screen) => void }> = ({ user, setScreen }) => {
     const [idea, setIdea] = useState('');
     const [script, setScript] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -626,12 +642,16 @@ const AiScriptScreen = () => {
             const result = await generateScript(idea);
             setScript(result);
         } catch (error) {
-            // Fix: The caught error is of type 'unknown'. Cast to 'any' to log it.
-            console.error(error as any);
+            // Fix: The caught error is of type 'unknown'. Cast to a string to log it.
+            console.error(String(error));
             setScript("<h2>Erro</h2><p>Algo deu errado. Por favor, verifique o console para mais detalhes.</p>");
         }
         setIsLoading(false);
     }, [idea]);
+
+    if (!user.isSupporter) {
+        return <BecomeSupporterForScriptScreen setScreen={setScreen} />;
+    }
 
     return (
         <div className="max-w-2xl mx-auto flex flex-col items-center">
@@ -727,4 +747,495 @@ const AcademyScreen = () => {
                              whileHover={{ x: 4 }}
                         >
                              <Card className="!p-3 flex items-center space-x-4">
-                                 <img src={lesson.thumbnailUrl}
+                                 <img src={lesson.thumbnailUrl} alt={lesson.title} className="w-24 h-16 object-cover rounded-lg" />
+                                 <div className="flex-1">
+                                     <h3 className="font-bold text-base">{lesson.title}</h3>
+                                     <p className="text-sm text-text-secondary">{lesson.duration}</p>
+                                 </div>
+                             </Card>
+                        </motion.div>
+                    ))}
+                </motion.div>
+            </motion.div>
+        </motion.div>
+    );
+};
+
+const ApoioScreen: React.FC<{ user: AppUser, showNotification: (msg: string) => void }> = ({ user, showNotification }) => {
+    const [requests, setRequests] = useLocalStorage<{ userId: number, userName: string }[]>('oyasify-supporter-requests', []);
+    const hasRequested = requests.some(r => r.userId === user.id);
+
+    const handleRequestSupporter = () => {
+        if (hasRequested) {
+            showNotification('Você já enviou um pedido.');
+            return;
+        }
+        setRequests([...requests, { userId: user.id, userName: user.name }]);
+        showNotification('Pedido enviado! Aguarde a aprovação do admin.');
+    };
+
+    return (
+        <div className="max-w-2xl mx-auto flex flex-col items-center text-center">
+            <h1 className="text-3xl font-bold mb-2 text-text-primary flex items-center gap-2"><Heart className="text-accent-primary" />Apoie o Oyasify</h1>
+            <p className="text-text-secondary mb-6 text-base">Seu apoio é fundamental para a evolução contínua do projeto!</p>
+            
+            <Card className="w-full p-6">
+                {user.isSupporter ? (
+                    <div className="text-center">
+                        <Crown size={48} className="mx-auto text-yellow-500 mb-3" />
+                        <h2 className="text-xl font-bold">Obrigado por ser um Apoiador!</h2>
+                        <p className="text-text-secondary mt-1">Você tem acesso ao tema exclusivo e a futuros benefícios!</p>
+                    </div>
+                ) : (
+                    <>
+                        <p className="text-text-secondary mb-4">Clique no botão abaixo para contribuir com o projeto através da plataforma Kiwify.</p>
+                        <motion.button 
+                            whileTap={{ scale: 0.95 }} whileHover={{y: -2}}
+                            onClick={() => window.open('https://pay.kiwify.com.br/BAp0lC8', '_blank')}
+                            className="w-full bg-accent-primary text-white font-bold py-3 px-4 rounded-xl hover:bg-accent-secondary transition-colors text-base"
+                        >
+                            Apoie aqui
+                        </motion.button>
+                        <div className="my-4 text-center text-text-secondary text-sm">ou</div>
+                        <motion.button 
+                            whileTap={{ scale: 0.95 }} whileHover={{y: -2}}
+                            onClick={handleRequestSupporter}
+                            disabled={hasRequested}
+                            className="w-full bg-bg-tertiary text-text-primary font-bold py-3 px-4 rounded-xl hover:bg-accent-primary/20 disabled:bg-bg-tertiary disabled:text-text-secondary disabled:cursor-not-allowed transition-colors text-base"
+                        >
+                            {hasRequested ? 'Pedido Enviado' : 'Já apoiei! Liberar cargo'}
+                        </motion.button>
+                        <p className="text-xs text-text-secondary mt-3">Após apoiar, clique no botão acima para solicitar seu cargo de Apoiador.</p>
+                    </>
+                )}
+            </Card>
+        </div>
+    );
+};
+
+// FIX: Added ProfileView component definition to resolve 'Cannot find name' error.
+const ProfileView: React.FC<{ user: AppUser, setUser: (user: AppUser) => void, showNotification: (msg: string) => void }> = ({ user, setUser, showNotification }) => {
+    const { theme, setTheme } = useContext(ThemeContext);
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [isEditingBio, setIsEditingBio] = useState(false);
+    const [name, setName] = useState(user.name);
+    const [bio, setBio] = useState(user.bio);
+    const [isAdminModalOpen, setAdminModalOpen] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleSaveName = () => {
+        setUser({ ...user, name });
+        setIsEditingName(false);
+        showNotification('Nome salvo!');
+    };
+    
+    const handleSaveBio = () => {
+        setUser({ ...user, bio });
+        setIsEditingBio(false);
+        showNotification('Biografia salva!');
+    };
+
+    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const avatarUrl = URL.createObjectURL(e.target.files[0]);
+            setUser({ ...user, avatarUrl });
+        }
+    };
+    
+    const handleThemeChange = (themeKey: string) => {
+        const newTheme = THEMES.find(t => t.key === themeKey);
+        if (newTheme) {
+            setTheme(newTheme);
+            setUser({ ...user, theme: themeKey });
+        }
+    };
+    
+    const THEME_ICONS: {[key: string]: React.FC<any>} = {
+        rosa: Flower2,
+        oceano: Droplet,
+        solar: Flame,
+        ametista: Gem,
+        rubi: Heart,
+        floresta: Leaf,
+        apoiador: Crown,
+    }
+
+    return (
+        <div className="space-y-4">
+            <AnimatePresence>
+                {isAdminModalOpen && <AdminModal onClose={() => setAdminModalOpen(false)} showNotification={showNotification} />}
+            </AnimatePresence>
+            
+            <Card className="!p-5">
+                 <div className="flex flex-col items-center text-center">
+                    <div className="relative">
+                        <img src={user.avatarUrl} alt={name} className="w-20 h-20 rounded-full object-cover" />
+                        <motion.button whileTap={{scale: 0.9}} onClick={() => fileInputRef.current?.click()} className="absolute bottom-0 right-0 bg-accent-primary p-1 rounded-full border-2 border-bg-secondary">
+                            <Pencil size={14} className="text-white"/>
+                        </motion.button>
+                         <input type="file" accept="image/*" ref={fileInputRef} onChange={handleAvatarChange} className="hidden" />
+                    </div>
+                    <h2 className="text-2xl font-bold mt-2">{user.name}</h2>
+                    <p className="text-text-secondary max-w-sm text-sm mt-1">{user.bio}</p>
+                </div>
+            </Card>
+
+            {user.role === 'owner' && (
+                <motion.button whileTap={{ scale: 0.95 }} onClick={() => { playSound('click'); setAdminModalOpen(true); }} className="w-full p-2.5 bg-accent-primary text-white font-bold rounded-xl hover:bg-accent-secondary text-sm">
+                    Painel de Administrador
+                </motion.button>
+            )}
+            
+            <Card className="!p-5">
+                <div className="flex justify-between items-center">
+                    <p className="text-text-secondary text-xs">Nome de exibição</p>
+                    <button onClick={() => { playSound('click'); setIsEditingName(true); }} className="text-accent-primary font-bold text-xs">Editar</button>
+                </div>
+                {isEditingName ? (
+                    <div className="mt-2 flex gap-2">
+                        <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full p-1.5 bg-bg-tertiary rounded-md focus:outline-none focus:ring-2 ring-accent-primary text-sm"/>
+                        <button onClick={handleSaveName} className="px-2.5 bg-accent-primary text-white rounded-md font-semibold text-xs">Salvar</button>
+                    </div>
+                ): <p className="font-bold text-base mt-1">{user.name}</p>}
+            </Card>
+             <Card className="!p-5">
+                <div className="flex justify-between items-center">
+                    <p className="text-text-secondary text-xs">Biografia</p>
+                    <button onClick={() => { playSound('click'); setIsEditingBio(true); }} className="text-accent-primary font-bold text-xs">Editar</button>
+                </div>
+                 {isEditingBio ? (
+                     <div className="mt-2 flex gap-2">
+                         <textarea value={bio} onChange={e => setBio(e.target.value)} className="w-full p-1.5 h-16 bg-bg-tertiary rounded-md focus:outline-none focus:ring-2 ring-accent-primary resize-none text-sm"/>
+                         <button onClick={handleSaveBio} className="px-2.5 bg-accent-primary text-white rounded-md font-semibold text-xs">Salvar</button>
+                     </div>
+                 ) : <p className="font-bold text-base mt-1">{user.bio}</p>}
+            </Card>
+
+            <Card className="!p-5">
+                <h3 className="text-lg font-bold mb-3">Tema Visual</h3>
+                <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
+                    {THEMES.filter(t => t.key !== 'apoiador' || user.isSupporter).map(t => {
+                        const Icon = THEME_ICONS[t.key] || Palette;
+                        return (
+                        <div key={t.key} onClick={() => { playSound('click'); handleThemeChange(t.key); }} className="cursor-pointer text-center group">
+                            <motion.div 
+                                className="w-12 h-12 rounded-full flex items-center justify-center relative transition-all" 
+                                style={{ backgroundColor: t.properties['--accent-primary'] }}
+                                animate={{ scale: theme.key === t.key ? 1.1 : 1, y: theme.key === t.key ? -5 : 0 }}
+                            >
+                               <Icon size={24} className="text-white/90" />
+                               {theme.key === t.key && <motion.div layoutId="theme-selector" className="absolute inset-0 ring-2 ring-accent-primary rounded-full" />}
+                            </motion.div>
+                        </div>
+                    )})}
+                </div>
+            </Card>
+        </div>
+    )
+};
+
+const ProfileScreen: React.FC<{ user: AppUser, setUser: (user: AppUser) => void, showNotification: (msg: string) => void }> = ({ user, setUser, showNotification }) => {
+    const { theme, setTheme } = useContext(ThemeContext);
+    const [tab, setTab] = useState<'profile' | 'friends'>('profile');
+
+    return (
+        <div className="max-w-2xl mx-auto">
+            <div className="border-b border-bg-tertiary/50 mb-4">
+                <nav className="-mb-px flex justify-center space-x-8" aria-label="Tabs">
+                    <button onClick={() => { playSound('click'); setTab('profile'); }} className={`whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm ${tab === 'profile' ? 'border-accent-primary text-accent-primary' : 'border-transparent text-text-secondary hover:text-text-primary'}`}>
+                        Perfil
+                    </button>
+                    <button onClick={() => { playSound('click'); setTab('friends'); }} className={`whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm ${tab === 'friends' ? 'border-accent-primary text-accent-primary' : 'border-transparent text-text-secondary hover:text-text-primary'}`}>
+                        Amigos & Chat
+                    </button>
+                </nav>
+            </div>
+
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={tab}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                >
+                    {tab === 'profile' && <ProfileView user={user} setUser={setUser} showNotification={showNotification} />}
+                    {tab === 'friends' && <p>Amigos aqui</p>}
+                </motion.div>
+            </AnimatePresence>
+        </div>
+    );
+};
+
+const MainContent: React.FC<{ screen: Screen, user: AppUser, setUser: (user: AppUser) => void, showNotification: (msg: string) => void, setScreen: (s: Screen) => void }> = ({ screen, user, setUser, showNotification, setScreen }) => (
+    <main className="flex-1 overflow-y-auto p-4 pb-20 overscroll-contain">
+        <AnimatePresence mode="wait">
+            <motion.div
+                key={screen}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.2 }}
+            >
+                {screen === 'home' && <HomeScreen user={user} setScreen={setScreen} />}
+                {screen === 'vocal' && <VocalScreen />}
+                {screen === 'ai-script' && <AiScriptScreen user={user} setScreen={setScreen} />}
+                {screen === 'profile' && <ProfileScreen user={user} setUser={setUser} showNotification={showNotification} />}
+                {screen === 'academy' && <AcademyScreen />}
+                {screen === 'apoio' && <ApoioScreen user={user} showNotification={showNotification} />}
+                {screen === 'oyasify-ai' && <p>Oyasify AI</p>}
+            </motion.div>
+        </AnimatePresence>
+    </main>
+);
+
+const Header: React.FC<{ onMenuClick: () => void, onNotificationsClick: () => void, user: AppUser }> = ({ onMenuClick, onNotificationsClick, user }) => {
+    const [supporterRequests] = useLocalStorage('oyasify-supporter-requests', []);
+    const hasNotifications = user.role === 'owner' && supporterRequests.length > 0;
+
+    return (
+    <header className="flex-shrink-0 bg-transparent h-16 flex items-center justify-between px-4 sm:px-6 z-10">
+        <motion.button whileTap={{ scale: 0.9 }} onClick={onMenuClick} className="p-2 rounded-full">
+            <LogoIcon className="text-accent-primary h-8 w-8" />
+        </motion.button>
+        <motion.button whileTap={{ scale: 0.9 }} onClick={onNotificationsClick} className="p-2 rounded-full relative">
+            <Bell className="text-gray-500" size={24} />
+             {hasNotifications && <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger rounded-full border border-bg-primary" />}
+        </motion.button>
+    </header>
+    );
+};
+
+const Drawer: React.FC<{ isOpen: boolean, setOpen: (isOpen: boolean) => void, user: AppUser, setScreen: (s: Screen) => void, onLogout: () => void, currentScreen: Screen }> = ({ isOpen, setOpen, user, setScreen, onLogout, currentScreen }) => {
+    const handleLogout = () => {
+        playSound('click');
+        onLogout();
+    };
+
+    const navItems = [
+        { screen: 'home', label: 'Início' },
+        { screen: 'vocal', label: 'Vocal' },
+        { screen: 'academy', label: 'Academy' },
+        { screen: 'ai-script', label: 'Roteiro AI' },
+        { screen: 'oyasify-ai', label: 'Oyasify AI' },
+        { screen: 'apoio', label: 'Apoiar Projeto' },
+        { screen: 'suporte', label: 'Suporte' },
+    ] as const;
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <>
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="fixed inset-0 bg-black/30 z-30"
+                    onClick={() => setOpen(false)}
+                />
+                <motion.div
+                    initial={{ x: '-100%' }}
+                    animate={{ x: 0 }}
+                    exit={{ x: '-100%' }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                    className="absolute top-0 left-0 h-full w-72 bg-bg-secondary z-40 shadow-xl flex flex-col p-5 rounded-r-2xl"
+                >
+                    <div className="flex items-center space-x-3 mb-6">
+                         <div className="w-12 h-12 rounded-full bg-bg-tertiary flex items-center justify-center text-accent-primary font-bold text-xl">
+                            {user.name.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                            <p className="font-bold text-lg text-text-primary">{user.name}</p>
+                            <p className="text-text-secondary text-xs">{user.role === 'owner' ? 'Dono' : 'Criador'}</p>
+                        </div>
+                    </div>
+
+                    <nav className="flex-1 flex flex-col">
+                         {navItems.map(item => (
+                            <button 
+                                key={item.screen} 
+                                onClick={() => setScreen(item.screen)}
+                                className={`w-full text-left p-2.5 rounded-lg font-semibold text-base transition-colors mb-1 ${
+                                    currentScreen === item.screen ? 'text-accent-primary' : 'text-text-secondary hover:bg-bg-tertiary'
+                                }`}
+                            >
+                                {item.label}
+                            </button>
+                        ))}
+                    </nav>
+                    
+                    <div className="border-t border-bg-tertiary my-2"></div>
+                    
+                    <button onClick={() => setScreen('profile')} className={`w-full text-left p-2.5 rounded-lg font-semibold text-base transition-colors mt-1 ${ currentScreen === 'profile' ? 'text-accent-primary' : 'text-text-secondary hover:bg-bg-tertiary' }`}>
+                        Perfil
+                    </button>
+                     <button onClick={handleLogout} className="w-full text-left p-2.5 rounded-lg font-semibold text-base text-red-500 hover:bg-red-500/10 transition-colors">
+                        Sair
+                    </button>
+                </motion.div>
+                </>
+            )}
+        </AnimatePresence>
+    );
+};
+
+const NotificationsPanel: React.FC<{ user: AppUser, onClose: () => void }> = ({ user, onClose }) => {
+    const [requests] = useLocalStorage<{ userId: number, userName: string }[]>('oyasify-supporter-requests', []);
+    const [globalNotification] = useLocalStorage<{ message: string | null }>('oyasify-global-notification', { message: null });
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="absolute top-16 right-4 w-72 bg-bg-secondary rounded-lg shadow-lg z-30 p-3"
+        >
+            <h3 className="font-bold text-base mb-2">Notificações</h3>
+            <div className="space-y-2">
+                {globalNotification.message && (
+                    <div className="text-xs bg-bg-tertiary p-2 rounded-md">{globalNotification.message}</div>
+                )}
+                {user.role === 'owner' && requests.map(req => (
+                    <div key={req.userId} className="text-xs bg-bg-tertiary p-2 rounded-md">
+                        <span className="font-bold">{req.userName}</span> quer se tornar um Apoiador!
+                    </div>
+                ))}
+                {(requests.length === 0 && !globalNotification.message) && (
+                    <p className="text-xs text-text-secondary">Nenhuma notificação nova.</p>
+                )}
+            </div>
+        </motion.div>
+    );
+};
+
+const BottomNav: React.FC<{ currentScreen: Screen, setScreen: (s: Screen) => void }> = ({ currentScreen, setScreen }) => {
+    const navItems = [
+        { screen: 'home', icon: Home },
+        { screen: 'vocal', icon: Mic },
+        { screen: 'ai-script', icon: Sparkles },
+        { screen: 'profile', icon: UserIcon },
+    ] as const;
+
+    return (
+        <nav className="fixed bottom-0 left-0 right-0 h-16 bg-bg-secondary flex justify-around items-center border-t border-bg-tertiary z-20">
+            {navItems.map(({ screen, icon: Icon }) => (
+                <motion.button
+                    key={screen}
+                    onClick={() => setScreen(screen)}
+                    className="flex flex-col items-center justify-center w-full h-full relative"
+                    whileTap={{ scale: 0.9 }}
+                >
+                    <Icon size={28} className={currentScreen === screen ? 'text-accent-primary' : 'text-gray-400'} strokeWidth={currentScreen === screen ? 2.5 : 2} />
+                </motion.button>
+            ))}
+        </nav>
+    );
+};
+
+
+// --- Application ---
+const Application: React.FC<{ user: AppUser, onLogout: () => void }> = ({ user, onLogout }) => {
+    const [users, setUsers] = useLocalStorage<(AppUser & { password?: string })[]>('oyasify-users', []);
+    const [session, setSession] = useLocalStorage<{ user: AppUser }>('oyasify-session', { user });
+
+    const [screen, setScreen] = useState<Screen>('home');
+    const [isDrawerOpen, setDrawerOpen] = useState(false);
+    const [notification, setNotification] = useState<string | null>(null);
+    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const [globalNotification, setGlobalNotification] = useLocalStorage('oyasify-global-notification', { message: null, seen: true });
+    
+    const showNotification = (message: string) => {
+        playSound('notification');
+        setNotification(message);
+        setTimeout(() => setNotification(null), 3000);
+    };
+    
+    useEffect(() => {
+        if (globalNotification.message && !globalNotification.seen) {
+            showNotification(globalNotification.message);
+            setGlobalNotification({ ...globalNotification, seen: true });
+        }
+    }, [globalNotification, setGlobalNotification]);
+
+    const handleSetScreen = (s: Screen) => {
+        playSound('click');
+        setScreen(s);
+        setDrawerOpen(false);
+    };
+    
+    const handleUpdateUser = (updatedUser: AppUser) => {
+       setSession({ user: updatedUser });
+       const userIndex = users.findIndex(u => u.id === updatedUser.id);
+       if (userIndex > -1) {
+           const newUsers = [...users];
+           const existingUser = newUsers[userIndex];
+           newUsers[userIndex] = { ...existingUser, ...updatedUser };
+           setUsers(newUsers);
+       }
+    };
+
+    return (
+        <div className="h-screen w-screen flex flex-col md:flex-row overflow-hidden">
+            <AnimatePresence>
+                {notification && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -50, x: '-50%' }}
+                        animate={{ opacity: 1, y: 20, x: '-50%' }}
+                        exit={{ opacity: 0, y: -50, x: '-50%' }}
+                        className="fixed top-0 left-1/2 z-50 bg-accent-primary text-white py-1.5 px-5 rounded-full shadow-lg text-sm"
+                    >
+                        {notification}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            
+            <Drawer user={session.user} isOpen={isDrawerOpen} setOpen={setDrawerOpen} setScreen={handleSetScreen} onLogout={onLogout} currentScreen={screen} />
+            <div className="flex-1 flex flex-col min-w-0">
+                <Header 
+                    onMenuClick={() => { playSound('click'); setDrawerOpen(true); }} 
+                    onNotificationsClick={() => { playSound('click'); setIsNotificationsOpen(!isNotificationsOpen); }}
+                    user={session.user} 
+                />
+                 <AnimatePresence>
+                    {isNotificationsOpen && <NotificationsPanel user={session.user} onClose={() => setIsNotificationsOpen(false)} />}
+                </AnimatePresence>
+                <MainContent 
+                    screen={screen} 
+                    user={session.user} 
+                    setUser={handleUpdateUser} 
+                    showNotification={showNotification} 
+                    setScreen={handleSetScreen} 
+                />
+                <BottomNav currentScreen={screen} setScreen={handleSetScreen} />
+            </div>
+        </div>
+    );
+};
+
+// --- Main App Component ---
+const App: React.FC = () => {
+    const [session, setSession] = useLocalStorage<{ user: AppUser } | null>('oyasify-session', null);
+    const [view, setView] = useState<'welcome' | 'auth'>('welcome');
+    const themeKey = session?.user?.theme || 'oceano';
+
+    const handleLogout = () => {
+        setSession(null);
+        setView('welcome');
+    };
+
+    return (
+        <ThemeProvider initialThemeKey={themeKey}>
+            {session ? (
+                <Application user={session.user} onLogout={handleLogout} />
+            ) : (
+                view === 'welcome' ? (
+                    <WelcomeScreen onStart={() => setView('auth')} />
+                ) : (
+                    <Auth onLogin={setSession} />
+                )
+            )}
+        </ThemeProvider>
+    );
+};
+
+export default App;

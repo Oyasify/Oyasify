@@ -1,5 +1,5 @@
 
-export type Screen = 'home' | 'vocal' | 'ai-script' | 'profile' | 'academy' | 'apoio' | 'oyasify-ai';
+export type Screen = 'home' | 'vocal' | 'ai-script' | 'profile' | 'academy' | 'apoio' | 'oyasify-ai' | 'suporte';
 
 export interface User {
   id: number;

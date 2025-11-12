@@ -6,10 +6,11 @@ import {
 import { 
     THEMES, initialFriends, chats as initialChats, ACADEMY_LESSONS, initialUsersForDiscovery, OWNER_CREDENTIALS 
 } from './constants';
+// Fix: Corrected typo in function name from chatWithOyasi-fyAI to chatWithOyasifyAI to resolve import errors.
 import { generateScript, chatWithOyasifyAI, generateImageWithOyasifyAI } from './services/geminiService';
 import { 
     Home, Mic, User as UserIcon, GraduationCap, Send, Plus, Paperclip, LogOut,
-    X, Bell, Palette, Download, Link as LinkIcon, Heart, Shield, Crown, Flower2, Rocket, Sparkles, Pencil, MessageSquare, Droplet, Flame, Gem, Leaf, MicOff, Play, Pause, Check, Users, Search, Phone
+    X, Bell, Palette, Download, Link as LinkIcon, Heart, Shield, Crown, Flower2, Rocket, Sparkles, Pencil, MessageSquare, Droplet, Flame, Gem, Leaf, MicOff, Play, Pause, Check, Users, Search, Phone, HelpCircle, ClipboardCopy
 } from 'lucide-react';
 
 // --- Local Storage Hooks ---
@@ -20,7 +21,7 @@ const useLocalStorage = <T,>(key: string, initialValue: T): [T, (value: T | ((va
             return item ? JSON.parse(item) : initialValue;
         } catch (error) {
             // Fix: The caught error is of type 'unknown'. Cast to 'any' to log it.
-            console.error(error as any);
+            console.error(String(error));
             return initialValue;
         }
     });
@@ -32,7 +33,7 @@ const useLocalStorage = <T,>(key: string, initialValue: T): [T, (value: T | ((va
             window.localStorage.setItem(key, JSON.stringify(valueToStore));
         } catch (error) {
             // Fix: The caught error is of type 'unknown'. Cast to 'any' to log it.
-            console.error(error as any);
+            console.error(String(error));
         }
     };
     return [storedValue, setValue];
@@ -61,20 +62,18 @@ const playSound = (type: 'click' | 'notification' | 'sent' | 'start_recording' |
     let soundFile: string;
     switch (type) {
         case 'notification':
-            soundFile = 'data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZ4KSYXgA837/3wMRgBwA9A4+BsDP/y//4wMQaAEMAwwDEYEyP/DAAFFQz/wAY709//5x//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//-AANCLAmp96AAAADAAAAABhAAQN+8AAAACgAAATEFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTAAAAAAEAAANIAAD+AAAQAAAAAEgAAAAAAAAAEhQAAQAAAAAAAAAEAAADgAABAAAAAAAAAAAAAAA';
+            soundFile = 'data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZ4KSYXgA837/3wMRgBwA9A4+BsDP/y//4wMQaAEMAwwDEYEyP/DAAFFQz/wAY709//5x//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//-AANCLAmp96AAAADAAAAABhAAQN+8AAAACgAAATEFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTAAAAAAEAAANIAAD/AAAQAAAAAEgAAAAAAAAAEhQAAQAAAAAAAAAEAAADgAABAAAAAAAAAAAAAAA';
             break;
         case 'click':
         case 'sent':
         case 'start_recording':
         case 'cancel_recording':
         default:
-            soundFile = 'data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZ4JFdpKgdHVkXY8gAR//LgAAAAAAAAAAAABQTEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV-AAVERpqgA9QAL/8AAB//4gAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
+            soundFile = 'data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZ4JFdpKgdHVkXY8gAR//LgAAAAAAAAAAAABQTEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV-AAVERpqgA9QAL/8AAB//4gAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
             break;
     }
-    // Fix: The error object from a promise rejection is of type `unknown`.
-    // Cast to 'any' to allow logging with console.error.
-    // FIX: The error is of type unknown. Explicitly cast it to a string for logging to resolve the type error.
-    new Audio(soundFile).play().catch(e => console.error('Error playing sound:', String(e)));
+    // FIX: Replaced multi-argument console.error with a template literal to ensure a single string argument, preventing potential type errors with strict linting rules.
+    new Audio(soundFile).play().catch(e => console.error(`Error playing sound: ${String(e)}`));
 };
 
 // --- New Logo Component ---
@@ -393,8 +392,9 @@ const ChatInput: React.FC<{ onSendMessage: (msg: Message) => void }> = ({ onSend
                 mediaRecorderRef.current.start();
                 setIsRecording(true);
             } catch (err) {
-                // Fix: The caught error is of type 'unknown'. Cast to 'any' to log it.
-                console.error("Error starting recording:", err as any);
+                // Fix: The caught error is of type 'unknown'. Cast to a string to log it.
+// FIX: Changed multi-argument console.error to a single template literal for consistency.
+                console.error(`Error starting recording: ${String(err)}`);
             }
         }
     };
@@ -620,7 +620,25 @@ const VocalScreen: React.FC = () => (
     </motion.div>
 );
 
-const AiScriptScreen = () => {
+const BecomeSupporterForScriptScreen: React.FC<{ setScreen: (s: Screen) => void }> = ({ setScreen }) => (
+    <div className="max-w-md mx-auto flex flex-col items-center text-center">
+        <h1 className="text-2xl font-bold mb-1 text-text-primary flex items-center gap-2"><Crown className="text-yellow-500" /> Acesso Exclusivo</h1>
+        <p className="text-text-secondary mb-4 text-sm">A funcionalidade Roteiro AI está disponível apenas para apoiadores.</p>
+        <Card className="w-full p-6 space-y-4">
+            <p className="text-text-secondary">Torne-se um apoiador para desbloquear esta e outras vantagens exclusivas e ajude a manter o projeto!</p>
+            <motion.button
+                onClick={() => setScreen('apoio')}
+                whileTap={{ scale: 0.98 }} whileHover={{ y: -2 }}
+                className="w-full bg-accent-primary text-white font-bold py-3 px-4 rounded-xl hover:bg-accent-secondary transition-colors text-base flex items-center justify-center gap-2"
+            >
+                <Heart size={20} /> Ver Vantagens de Apoiador
+            </motion.button>
+        </Card>
+    </div>
+);
+
+
+const AiScriptScreen: React.FC<{ user: AppUser; setScreen: (s: Screen) => void }> = ({ user, setScreen }) => {
     const [idea, setIdea] = useState('');
     const [script, setScript] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -633,12 +651,16 @@ const AiScriptScreen = () => {
             const result = await generateScript(idea);
             setScript(result);
         } catch (error) {
-            // Fix: The caught error is of type 'unknown'. Cast to 'any' to log it.
-            console.error(error as any);
+            // Fix: The caught error is of type 'unknown'. Cast to a string to log it.
+            console.error(String(error));
             setScript("<h2>Erro</h2><p>Algo deu errado. Por favor, verifique o console para mais detalhes.</p>");
         }
         setIsLoading(false);
     }, [idea]);
+
+    if (!user.isSupporter) {
+        return <BecomeSupporterForScriptScreen setScreen={setScreen} />;
+    }
 
     return (
         <div className="max-w-2xl mx-auto flex flex-col items-center">
@@ -799,6 +821,24 @@ const ApoioScreen: React.FC<{ user: AppUser, showNotification: (msg: string) => 
         </div>
     );
 };
+
+const SupportScreen: React.FC = () => (
+    <div className="max-w-2xl mx-auto flex flex-col items-center text-center">
+        <h1 className="text-3xl font-bold mb-2 text-text-primary flex items-center gap-2"><HelpCircle className="text-accent-primary" />Suporte</h1>
+        <p className="text-text-secondary mb-6 text-base">Precisa de ajuda ou tem alguma dúvida? Fale conosco!</p>
+        <Card className="w-full p-6">
+            <motion.button
+                whileTap={{ scale: 0.95 }} whileHover={{ y: -2 }}
+                onClick={() => window.open('https://w.app/oyasuai', '_blank')}
+                className="w-full bg-green-500 text-white font-bold py-3 px-4 rounded-xl hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-message-circle"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></svg>
+                Fale Conosco no WhatsApp
+            </motion.button>
+        </Card>
+    </div>
+);
+
 
 const AIChatInput: React.FC<{ onSendMessage: (text: string) => void; isLoading: boolean; onAddImages: (files: FileList | null) => void; }> = ({ onSendMessage, isLoading, onAddImages }) => {
     const [text, setText] = useState('');
@@ -987,8 +1027,9 @@ const AudioCallModal: React.FC<{
                 setAudioOutputDevices(audioOut);
                 if (audioIn.length > 0) setSelectedAudioInput(audioIn[0].deviceId);
                 if (audioOut.length > 0) setSelectedAudioOutput(audioOut[0].deviceId);
-// Fix: The caught error `e` is of type `unknown`. Cast to `any` to allow logging with console.error, ensuring consistency with other error handlers in the file.
-            } catch (e) { console.error("Error enumerating devices:", e as any); }
+// Fix: The caught error `e` is of type `unknown`. Cast to a string to allow logging with console.error, ensuring consistency with other error handlers in the file.
+// FIX: Changed multi-argument console.error to a single template literal for consistency.
+            } catch (e) { console.error(`Error enumerating devices: ${String(e)}`); }
         };
         setupDevices();
     }, []);
@@ -1006,7 +1047,8 @@ const AudioCallModal: React.FC<{
                 });
                 localStreamRef.current = stream;
             } catch (e) { 
-                console.error("Error getting user media:", e as any); 
+// FIX: Changed multi-argument console.error to a single template literal for consistency.
+                console.error(`Error getting user media: ${String(e)}`); 
             }
         };
         getMedia();
@@ -1018,8 +1060,9 @@ const AudioCallModal: React.FC<{
             if (remoteAudioRef.current && selectedAudioOutput && 'setSinkId' in remoteAudioRef.current) {
                 try {
                     await (remoteAudioRef.current as any).setSinkId(selectedAudioOutput);
-// Fix: The caught error `e` is of type `unknown`. Cast to `any` to allow logging with console.error, ensuring consistency with other error handlers in the file.
-                } catch (e) { console.error('Error setting sink ID:', e as any); }
+// Fix: The caught error `e` is of type `unknown`. Cast to a string to allow logging with console.error, ensuring consistency with other error handlers in the file.
+// FIX: Changed multi-argument console.error to a single template literal for consistency.
+                } catch (e) { console.error(`Error setting sink ID: ${String(e)}`); }
             }
         };
         setSink();
@@ -1555,11 +1598,12 @@ const MainContent: React.FC<{ screen: Screen, user: AppUser, setUser: (user: App
                 >
                     {screen === 'home' && <HomeScreen user={user} setScreen={setScreen} />}
                     {screen === 'vocal' && <VocalScreen />}
-                    {screen === 'ai-script' && <AiScriptScreen />}
+                    {screen === 'ai-script' && <AiScriptScreen user={user} setScreen={setScreen} />}
                     {screen === 'profile' && <ProfileScreen user={user} setUser={setUser} showNotification={showNotification} onImageClick={onImageClick} />}
                     {screen === 'academy' && <AcademyScreen />}
                     {screen === 'apoio' && <ApoioScreen user={user} showNotification={showNotification} />}
                     {screen === 'oyasify-ai' && <OyasifyAIScreen onImageClick={onImageClick} />}
+                    {screen === 'suporte' && <SupportScreen />}
                 </motion.div>
             </AnimatePresence>
         </main>
@@ -1595,7 +1639,8 @@ const Drawer: React.FC<{ isOpen: boolean, setOpen: (isOpen: boolean) => void, us
         { screen: 'academy', label: 'Academy' },
         { screen: 'ai-script', label: 'Roteiro AI' },
         { screen: 'oyasify-ai', label: 'Oyasify AI' },
-        { screen: 'apoio', label: 'Apoio' },
+        { screen: 'apoio', label: 'Apoiar Projeto' },
+        { screen: 'suporte', label: 'Suporte' },
     ] as const;
 
     return (
@@ -1778,7 +1823,14 @@ const Application: React.FC<{ user: AppUser, onLogout: () => void }> = ({ user, 
                  <AnimatePresence>
                     {isNotificationsOpen && <NotificationsPanel user={session.user} onClose={() => setIsNotificationsOpen(false)} />}
                 </AnimatePresence>
-                <MainContent screen={screen} user={session.user} setUser={handleUpdateUser} showNotification={showNotification} setScreen={handleSetScreen} onImageClick={setViewingImage} />
+                <MainContent 
+                    screen={screen} 
+                    user={session.user} 
+                    setUser={handleUpdateUser} 
+                    showNotification={showNotification} 
+                    setScreen={handleSetScreen} 
+                    onImageClick={setViewingImage} 
+                />
                 <BottomNav currentScreen={screen} setScreen={handleSetScreen} />
             </div>
         </div>
