@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oyasify</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Lato:wght@400;700&family=Poppins:wght@400;600;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      /* Default theme values, matching the 'Oceano' theme */
+      --body-gradient: linear-gradient(180deg, #F0F9FF 0%, #E0F2FE 100%);
+      --scrollbar-track: #E0F2FE;
+      --scrollbar-thumb: #38BDF8;
+    }
+    body {
+      background: var(--body-gradient);
+      overscroll-behavior-y: contain;
+    }
+    .font-poppins { font-family: 'Poppins', sans-serif; }
+    .font-inter { font-family: 'Inter', sans-serif; }
+    .font-lato { font-family: 'Lato', sans-serif; }
+    .font-roboto-mono { font-family: 'Roboto Mono', monospace; }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--scrollbar-track);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--scrollbar-thumb);
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-secondary);
+    }
+
+    .bg-bg-primary { background-color: var(--bg-primary); }
+    .bg-bg-secondary { background-color: var(--bg-secondary); }
+    .bg-bg-tertiary { background-color: var(--bg-tertiary); }
+    .text-text-primary { color: var(--text-primary); }
+    .text-text-secondary { color: var(--text-secondary); }
+    .bg-accent-primary { background-color: var(--accent-primary); }
+    .text-accent-primary { color: var(--accent-primary); }
+    .border-accent-primary { border-color: var(--accent-primary); }
+    .ring-accent-primary { --tw-ring-color: var(--accent-primary); }
+    .hover\:bg-accent-secondary:hover { background-color: var(--accent-secondary); }
+    .bg-status-online { background-color: var(--status-online); }
+    .bg-status-offline { background-color: var(--status-offline); }
+    .bg-danger { background-color: var(--danger); }
+    .divide-bg-tertiary > :not([hidden]) ~ :not([hidden]) { border-color: var(--bg-tertiary); }
+    .border-bg-tertiary { border-color: var(--bg-tertiary); }
+  </style>
+
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.29.0",
+    "framer-motion": "https://aistudiocdn.com/framer-motion@^12.23.24",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.553.0"
+  }
+}
+</script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
