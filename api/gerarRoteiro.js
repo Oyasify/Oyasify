@@ -1,40 +1,42 @@
-import { GoogleGenerativeAI } from "@google/genai";
+import * as genai from "@google/genai";
 
 export default async function handler(req, res) {
   try {
     const apiKey = process.env.GEMINI_API_KEY;
-
     if (!apiKey) {
       return res.status(500).json({ error: "GEMINI_API_KEY not found" });
     }
 
-    let body = "";
-
-    // Necessário para Vercel (Other)
-    await new Promise((resolve) => {
-      req.on("data", (chunk) => {
-        body += chunk;
+    // Para Vercel Other, req.body já vem parseado se for JSON
+    let body = req.body;
+    if (!body) {
+      // fallback: ler como texto
+      body = await new Promise((resolve, reject) => {
+        let data = "";
+        req.on("data", (chunk) => (data += chunk));
+        req.on("end", () => resolve(data));
+        req.on("error", reject);
       });
-      req.on("end", resolve);
-    });
+      body = JSON.parse(body || "{}");
+    }
 
-    const { prompt } = JSON.parse(body || "{}");
-
+    const { prompt } = body;
     if (!prompt) {
       return res.status(400).json({ error: "Missing prompt" });
     }
 
-    // NOVO formato oficial do Google AI Studio
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",  // ← modelo correto
+    // Cria o cliente do Google Gemini
+    const client = new genai.GoogleGenAI({ apiKey });
+
+    // Gera o conteúdo com o modelo Gemini
+    const response = await client.generateText({
+      model: "gemini-1.5-flash",
+      prompt,
     });
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
+    const output = response.output_text || response[0]?.content || "";
 
-    return res.status(200).json({ text });
-
+    return res.status(200).json({ text: output });
   } catch (error) {
     console.error("API ERROR:", error);
     return res.status(500).json({ error: error.message });
