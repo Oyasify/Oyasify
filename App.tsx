@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -22,7 +23,12 @@ const useLocalStorage = <T,>(key: string, initialValue: T): [T, (value: T | ((va
         } catch (error) {
             // Fix: The caught error is of type 'unknown'. Cast to 'any' to log it.
             // FIX: Using template literal for descriptive error logging to resolve linter error.
-            console.error(`Error reading from localStorage for key "${key}": ${String(error)}`);
+            // FIX: Improved error handling to check for Error instance.
+            if (error instanceof Error) {
+                console.error(`Error reading from localStorage for key "${key}": ${error.message}`);
+            } else {
+                console.error(`Error reading from localStorage for key "${key}": ${String(error)}`);
+            }
             return initialValue;
         }
     });
@@ -35,7 +41,12 @@ const useLocalStorage = <T,>(key: string, initialValue: T): [T, (value: T | ((va
         } catch (error) {
             // Fix: The caught error is of type 'unknown'. Cast to 'any' to log it.
             // FIX: Using template literal for descriptive error logging to resolve linter error.
-            console.error(`Error writing to localStorage for key "${key}": ${String(error)}`);
+            // FIX: Improved error handling to check for Error instance.
+            if (error instanceof Error) {
+                console.error(`Error writing to localStorage for key "${key}": ${error.message}`);
+            } else {
+                console.error(`Error writing to localStorage for key "${key}": ${String(error)}`);
+            }
         }
     };
     return [storedValue, setValue];
@@ -64,14 +75,14 @@ const playSound = (type: 'click' | 'notification' | 'sent' | 'start_recording' |
     let soundFile: string;
     switch (type) {
         case 'notification':
-            soundFile = 'data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZ4KSYXgA837/3wMRgBwA9A4+BsDP/y//4wMQaAEMAwwDEYEyP/DAAFFQz/wAY709//5x//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//-AANCLAmp96AAAADAAAAABhAAQN+8AAAACgAAATEFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTAAAAAAEAAANIAAD/AAAQAAAAAEgAAAAAAAAAEhQAAQAAAAAAAAAEAAADgAABAAAAAAAAAAAAAAA';
+            soundFile = 'data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZ4KSYXgA837/3wMRgBwA9A4+BsDP/y//4wMQaAEMAwwDEYEyP/DAAFFQz/wAY709//5x//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//8A//-AANCLAmp96AAAADAAAAABhAAQN+8AAAACgAAATEFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTAAAAAAEAAANIAAD/AAAQAAAAAEgAAAAAAAAAEhQAAQAAAAAAAAAEAAADgAABAAAAAAAAAAAAAAA';
             break;
         case 'click':
         case 'sent':
         case 'start_recording':
         case 'cancel_recording':
         default:
-            soundFile = 'data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZ4JFdpKgdHVkXY8gAR//LgAAAAAAAAAAAABQTEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV-AAVERpqgA9QAL/8AAB//4gAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
+            soundFile = 'data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZ4JFdpKgdHVkXY8gAR//LgAAAAAAAAAAAABQTEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV-AAVERpqgA9QAL/8AAB//4gAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
             break;
     }
     // FIX: Refactored to handle promise rejection errors more explicitly, preventing a potential toolchain issue with the ternary operator.
@@ -280,7 +291,7 @@ const Modal: React.FC<{ title: string, children: React.ReactNode, onClose: () =>
             onClick={e => e.stopPropagation()}
         >
             <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold text-text-primary">{title}</h2>
+                <h2 className="text-base font-bold text-text-primary">{title}</h2>
                 <motion.button whileTap={{scale:0.9}} onClick={() => { playSound('click'); onClose(); }} className="p-1 rounded-full hover:bg-bg-tertiary"><X size={18} /></motion.button>
             </div>
             {children}
@@ -505,19 +516,19 @@ const AdminModal: React.FC<{ onClose: () => void, showNotification: (msg: string
     return (
         <Modal title="Painel de Administrador" onClose={onClose}>
             <div className="flex border-b border-bg-tertiary mb-4">
-                <button onClick={() => setView('notifications')} className={`py-2 px-3 text-sm ${view === 'notifications' ? 'border-b-2 border-accent-primary text-accent-primary' : 'text-text-secondary'}`}>Notificações</button>
-                <button onClick={() => setView('users')} className={`py-2 px-3 text-sm ${view === 'users' ? 'border-b-2 border-accent-primary text-accent-primary' : 'text-text-secondary'}`}>Usuários</button>
-                <button onClick={() => setView('requests')} className={`py-2 px-3 text-sm ${view === 'requests' ? 'border-b-2 border-accent-primary text-accent-primary' : 'text-text-secondary'}`}>Pedidos</button>
+                <button onClick={() => setView('notifications')} className={`py-2 px-3 text-xs ${view === 'notifications' ? 'border-b-2 border-accent-primary text-accent-primary' : 'text-text-secondary'}`}>Notificações</button>
+                <button onClick={() => setView('users')} className={`py-2 px-3 text-xs ${view === 'users' ? 'border-b-2 border-accent-primary text-accent-primary' : 'text-text-secondary'}`}>Usuários</button>
+                <button onClick={() => setView('requests')} className={`py-2 px-3 text-xs ${view === 'requests' ? 'border-b-2 border-accent-primary text-accent-primary' : 'text-text-secondary'}`}>Pedidos</button>
             </div>
             {view === 'notifications' && (
                 <div className="space-y-3">
-                    <h3 className="font-bold text-sm">Enviar Notificação Global</h3>
-                    <textarea value={notificationMsg} onChange={e => setNotificationMsg(e.target.value)} className="w-full p-2 bg-bg-tertiary rounded-md text-sm" placeholder="Sua mensagem aqui..."></textarea>
-                    <motion.button whileTap={{scale: 0.95}} onClick={handleSendNotification} className="w-full p-2 bg-accent-primary rounded-md text-white font-semibold text-sm">Enviar</motion.button>
+                    <h3 className="font-bold text-xs">Enviar Notificação Global</h3>
+                    <textarea value={notificationMsg} onChange={e => setNotificationMsg(e.target.value)} className="w-full p-2 bg-bg-tertiary rounded-md text-xs" placeholder="Sua mensagem aqui..."></textarea>
+                    <motion.button whileTap={{scale: 0.95}} onClick={handleSendNotification} className="w-full p-2 bg-accent-primary rounded-md text-white font-semibold text-xs">Enviar</motion.button>
                 </div>
             )}
             {view === 'users' && (
-                <div className="space-y-2 max-h-60 overflow-y-auto text-sm">
+                <div className="space-y-2 max-h-60 overflow-y-auto text-xs">
                     {users.filter(u => u.role !== 'owner').map(u => (
                         <div key={u.id} className="flex justify-between items-center bg-bg-tertiary p-2 rounded-md">
                             <p>{u.name} {u.isSupporter && '⭐'}</p>
@@ -527,13 +538,13 @@ const AdminModal: React.FC<{ onClose: () => void, showNotification: (msg: string
                 </div>
             )}
             {view === 'requests' && (
-                 <div className="space-y-2 max-h-60 overflow-y-auto text-sm">
+                 <div className="space-y-2 max-h-60 overflow-y-auto text-xs">
                      {requests.length > 0 ? requests.map(r => (
                          <div key={r.userId} className="flex justify-between items-center bg-bg-tertiary p-2 rounded-md">
                              <p>{r.userName}</p>
                              <motion.button whileTap={{scale: 0.95}} onClick={() => approveRequest(r.userId)} className="p-1 px-2 rounded-md text-xs bg-accent-primary text-white">Aprovar</motion.button>
                          </div>
-                     )) : <p className="text-text-secondary text-center text-sm">Nenhum pedido pendente.</p>}
+                     )) : <p className="text-text-secondary text-center text-xs">Nenhum pedido pendente.</p>}
                  </div>
             )}
         </Modal>
@@ -546,12 +557,12 @@ const HomeScreen: React.FC<{ user: AppUser, setScreen: (s: Screen) => void }> = 
              initial={{ opacity: 0, y: 20 }}
              animate={{ opacity: 1, y: 0 }}
              transition={{ type: 'spring', stiffness: 100, damping: 20, delay: 0.1 }}
-            className="text-4xl font-bold text-text-primary">Bem-vindo, {user.name}!</motion.h1>
+            className="text-3xl font-bold text-text-primary">Bem-vindo, {user.name}!</motion.h1>
         <motion.p 
              initial={{ opacity: 0, y: 20 }}
              animate={{ opacity: 1, y: 0 }}
              transition={{ type: 'spring', stiffness: 100, damping: 20, delay: 0.2 }}
-            className="text-text-secondary mt-1 mb-6 text-lg">Pronto para evoluir?</motion.p>
+            className="text-text-secondary mt-1 mb-6 text-base">Pronto para evoluir?</motion.p>
         
         <motion.div
              initial={{ opacity: 0, y: 20 }}
@@ -561,15 +572,15 @@ const HomeScreen: React.FC<{ user: AppUser, setScreen: (s: Screen) => void }> = 
         >
             <Card className="text-left p-6">
                 <div className="flex items-center mb-3">
-                    <h2 className="text-2xl font-bold text-text-primary">🎙️ Seja um Artista</h2>
+                    <h2 className="text-xl font-bold text-text-primary">🎙️ Seja um Artista</h2>
                 </div>
-                <p className="text-text-secondary mb-5 text-base">
+                <p className="text-text-secondary mb-5 text-sm">
                     Aprenda técnicas essenciais e descubra estratégias para construir sua carreira musical no universo geek.
                 </p>
                 <motion.button 
                     whileTap={{ scale: 0.95 }} 
                     whileHover={{ y: -2 }}
-                    className="w-full p-3 bg-accent-primary text-white font-bold rounded-xl hover:bg-accent-secondary transition-colors flex items-center justify-center text-base"
+                    className="w-full p-2.5 bg-accent-primary text-white font-bold rounded-xl hover:bg-accent-secondary transition-colors flex items-center justify-center text-sm"
                     onClick={(e) => { e.stopPropagation(); playSound('click'); setScreen('seja-um-artista'); }}
                 >
                     🎧 Artista
@@ -588,24 +599,24 @@ const CursoDeCantoScreen: React.FC = () => (
       >
         <motion.div variants={itemVariants}>
             <Card className="!p-5">
-                <h2 className="text-xl font-bold text-text-primary">Aquecimento Vocal</h2>
-                <p className="text-text-secondary mt-1 text-sm">Prepare sua voz com técnicas guiadas e sons de referência.</p>
+                <h2 className="text-lg font-bold text-text-primary">Aquecimento Vocal</h2>
+                <p className="text-text-secondary mt-1 text-xs">Prepare sua voz com técnicas guiadas e sons de referência.</p>
             </Card>
         </motion.div>
         <motion.div variants={itemVariants}>
             <Card className="!p-5">
-                <h2 className="text-xl font-bold text-text-primary">Técnica e Controle</h2>
-                <p className="text-text-secondary mt-1 text-sm">Trabalhe afinação, timbre e respiração com suporte visual inteligente.</p>
+                <h2 className="text-lg font-bold text-text-primary">Técnica e Controle</h2>
+                <p className="text-text-secondary mt-1 text-xs">Trabalhe afinação, timbre e respiração com suporte visual inteligente.</p>
             </Card>
         </motion.div>
         <motion.div variants={itemVariants}>
             <Card className="!p-5">
-                <h2 className="text-xl font-bold mb-2 text-text-primary">Curso Gratuito — com Henrique Mendonça</h2>
+                <h2 className="text-lg font-bold mb-2 text-text-primary">Curso Gratuito — com Henrique Mendonça</h2>
                 <div className="bg-yellow-100/50 border border-yellow-400 text-yellow-800 p-2 rounded-lg mb-3 flex items-start gap-2 text-xs" role="alert">
                     <span className="text-yellow-600 mt-0.5">⚠️</span>
                     <p>Este curso é uma versão antiga e contém pouco conteúdo, mas é excelente para iniciantes.</p>
                 </div>
-                <p className="text-text-secondary mb-3 leading-relaxed text-sm">
+                <p className="text-text-secondary mb-3 leading-relaxed text-xs">
                     As aulas desta seção são ministradas por <strong>Henrique Mendonça</strong>, criador do canal <strong>Academia Vocal</strong>. Um dos maiores nomes do canto popular no Brasil, conhecido por seu método claro e eficaz.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-2 mt-3">
@@ -631,17 +642,17 @@ const CursoDeCantoScreen: React.FC = () => (
 
 const SejaUmArtistaScreen: React.FC = () => (
     <motion.div 
-        className="space-y-4 max-w-2xl mx-auto"
+        className="space-y-3 max-w-2xl mx-auto"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
     >
-        <h1 className="text-2xl font-bold text-center text-text-primary">Seja um Artista</h1>
+        <h1 className="text-xl font-bold text-center text-text-primary">Seja um Artista</h1>
         
         <motion.div variants={itemVariants}>
             <Card className="!p-5">
-                <h2 className="text-lg font-bold text-text-primary mb-2">A Importância do Canto</h2>
-                <p className="text-text-secondary text-sm leading-relaxed">
+                <h2 className="text-base font-bold text-text-primary mb-2">A Importância do Canto</h2>
+                <p className="text-text-secondary text-xs leading-relaxed">
                     Cantar é mais do que apenas produzir sons agradáveis; é uma forma de expressão universal que conecta emoções e histórias. Para um artista, dominar o canto é a chave para transmitir sua mensagem de forma autêntica e impactante, criando uma conexão profunda com o público.
                 </p>
             </Card>
@@ -649,8 +660,8 @@ const SejaUmArtistaScreen: React.FC = () => (
 
         <motion.div variants={itemVariants}>
             <Card className="!p-5">
-                <h2 className="text-lg font-bold text-text-primary mb-2">Técnicas Essenciais</h2>
-                <ul className="text-text-secondary text-sm list-disc list-inside space-y-2">
+                <h2 className="text-base font-bold text-text-primary mb-2">Técnicas Essenciais</h2>
+                <ul className="text-text-secondary text-xs list-disc list-inside space-y-2">
                     <li><strong>Respiração Diafragmática:</strong> A base de um canto poderoso e controlado. Pratique respirar fundo, expandindo a barriga, para sustentar notas longas e manter a afinação.</li>
                     <li><strong>Apoio Vocal:</strong> Use os músculos do abdômen e das costas para apoiar sua voz, evitando forçar a garganta. Isso resulta em um som mais rico e previne lesões.</li>
                     <li><strong>Ressonância:</strong> Explore os espaços de ressonância do seu corpo (peito, boca, nariz e cabeça) para amplificar seu som naturalmente e adicionar timbre e cor à sua voz.</li>
@@ -661,8 +672,8 @@ const SejaUmArtistaScreen: React.FC = () => (
 
         <motion.div variants={itemVariants}>
             <Card className="!p-5">
-                <h2 className="text-lg font-bold text-text-primary mb-2">Como Crescer seu Canal de Música Geek/Rap</h2>
-                <p className="text-text-secondary text-sm leading-relaxed">
+                <h2 className="text-base font-bold text-text-primary mb-2">Como Crescer seu Canal de Música Geek/Rap</h2>
+                <p className="text-text-secondary text-xs leading-relaxed">
                     Criar um canal de sucesso no nicho geek vai além do talento musical. Conecte-se com sua comunidade, entenda as referências e crie conteúdo que ressoe com a paixão dos fãs. Faça covers de animes, crie raps sobre personagens de jogos, e participe de trends. A consistência, a qualidade de áudio/vídeo e a interação genuína nos comentários são seus maiores aliados para construir uma base de fãs leal e engajada.
                 </p>
             </Card>
@@ -699,13 +710,13 @@ const CrieSuaLetraScreen: React.FC = () => {
 
     return (
         <div className="max-w-2xl mx-auto flex flex-col items-center">
-            <h1 className="text-3xl font-bold mb-1 text-text-primary flex items-center gap-2"><Pencil className="text-accent-primary" />Crie sua Letra</h1>
-            <p className="text-text-secondary mb-6 text-center max-w-lg text-base">
+            <h1 className="text-2xl font-bold mb-1 text-text-primary flex items-center gap-2"><Pencil className="text-accent-primary" />Crie sua Letra</h1>
+            <p className="text-text-secondary mb-6 text-center max-w-lg text-sm">
                 Receba ideias de letras profissionais. A IA gerará uma base de alta qualidade para sua próxima música, independente do estilo.
             </p>
             
             <Card className="w-full p-6">
-                <label className="font-semibold text-text-primary mb-2 block text-base">Sua ideia para a música</label>
+                <label className="font-semibold text-text-primary mb-2 block text-sm">Sua ideia para a música</label>
                 <textarea
                     value={idea}
                     onChange={(e) => setIdea(e.target.value)}
@@ -713,7 +724,7 @@ const CrieSuaLetraScreen: React.FC = () => {
                     className="w-full h-28 p-3 bg-bg-tertiary rounded-lg focus:outline-none focus:ring-2 ring-accent-primary resize-none text-text-primary text-sm"
                 />
 
-                <label className="font-semibold text-text-primary mt-4 mb-2 block text-base">Estilo (opcional)</label>
+                <label className="font-semibold text-text-primary mt-4 mb-2 block text-sm">Estilo (opcional)</label>
                  <div className="flex flex-wrap gap-2">
                     {styles.map(style => (
                         <motion.button
@@ -731,7 +742,7 @@ const CrieSuaLetraScreen: React.FC = () => {
                     onClick={() => { playSound('click'); handleGenerate(); }}
                     disabled={isLoading || !idea.trim()}
                     whileTap={{ scale: 0.98 }} whileHover={{y: -2}}
-                    className="mt-5 w-full bg-accent-primary text-white font-bold py-3 px-4 rounded-xl hover:bg-accent-secondary disabled:bg-bg-tertiary disabled:text-text-secondary disabled:cursor-not-allowed transition-colors text-base"
+                    className="mt-5 w-full bg-accent-primary text-white font-bold py-2.5 px-4 rounded-xl hover:bg-accent-secondary disabled:bg-bg-tertiary disabled:text-text-secondary disabled:cursor-not-allowed transition-colors text-sm"
                 >
                     {isLoading ? 'Gerando...' : 'Gerar'}
                 </motion.button>
@@ -751,7 +762,7 @@ const CrieSuaLetraScreen: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     className="mt-6 bg-bg-secondary p-6 rounded-xl w-full"
                 >
-                    <div className="prose max-w-none text-text-primary text-sm" dangerouslySetInnerHTML={{ __html: lyrics }} />
+                    <div className="prose max-w-none text-text-primary text-xs" dangerouslySetInnerHTML={{ __html: lyrics }} />
                 </motion.div>
             )}
         </div>
@@ -761,14 +772,14 @@ const CrieSuaLetraScreen: React.FC = () => {
 
 const BecomeSupporterForScriptScreen: React.FC<{ setScreen: (s: Screen) => void }> = ({ setScreen }) => (
     <div className="max-w-md mx-auto flex flex-col items-center text-center">
-        <h1 className="text-2xl font-bold mb-1 text-text-primary flex items-center gap-2"><Crown className="text-yellow-500" /> Acesso Exclusivo</h1>
-        <p className="text-text-secondary mb-4 text-sm">A funcionalidade Roteiro AI está disponível apenas para apoiadores.</p>
+        <h1 className="text-xl font-bold mb-1 text-text-primary flex items-center gap-2"><Crown className="text-yellow-500" /> Acesso Exclusivo</h1>
+        <p className="text-text-secondary mb-4 text-xs">A funcionalidade Roteiro AI está disponível apenas para apoiadores.</p>
         <Card className="w-full p-6 space-y-4">
             <p className="text-text-secondary">Torne-se um apoiador para desbloquear esta e outras vantagens exclusivas e ajude a manter o projeto!</p>
             <motion.button
                 onClick={() => setScreen('apoio')}
                 whileTap={{ scale: 0.98 }} whileHover={{ y: -2 }}
-                className="w-full bg-accent-primary text-white font-bold py-3 px-4 rounded-xl hover:bg-accent-secondary transition-colors text-base flex items-center justify-center gap-2"
+                className="w-full bg-accent-primary text-white font-bold py-2.5 px-4 rounded-xl hover:bg-accent-secondary transition-colors text-sm flex items-center justify-center gap-2"
             >
                 <Heart size={20} /> Ver Vantagens de Apoiador
             </motion.button>
@@ -804,11 +815,11 @@ const AiScriptScreen: React.FC<{ user: AppUser; setScreen: (s: Screen) => void }
 
     return (
         <div className="max-w-2xl mx-auto flex flex-col items-center">
-            <h1 className="text-3xl font-bold mb-1 text-text-primary flex items-center gap-2"><Sparkles className="text-accent-primary" />Roteiro AI</h1>
-            <p className="text-text-secondary mb-6 text-center max-w-lg text-base">Gere roteiros criativos para seus vídeos, seja para YouTube, TikTok ou outra plataforma.</p>
+            <h1 className="text-2xl font-bold mb-1 text-text-primary flex items-center gap-2"><Sparkles className="text-accent-primary" />Roteiro AI</h1>
+            <p className="text-text-secondary mb-6 text-center max-w-lg text-sm">Gere roteiros criativos para seus vídeos, seja para YouTube, TikTok ou outra plataforma.</p>
             
             <Card className="w-full p-6">
-                <label className="font-semibold text-text-primary mb-2 block text-base">Sua Ideia para o Roteiro</label>
+                <label className="font-semibold text-text-primary mb-2 block text-sm">Sua Ideia para o Roteiro</label>
                 <textarea
                     value={idea}
                     onChange={(e) => setIdea(e.target.value)}
@@ -819,7 +830,7 @@ const AiScriptScreen: React.FC<{ user: AppUser; setScreen: (s: Screen) => void }
                     onClick={() => { playSound('click'); handleGenerate(); }}
                     disabled={isLoading || !idea.trim()}
                     whileTap={{ scale: 0.98 }} whileHover={{y: -2}}
-                    className="mt-4 w-full bg-accent-primary text-white font-bold py-3 px-4 rounded-xl hover:bg-accent-secondary disabled:bg-bg-tertiary disabled:text-text-secondary disabled:cursor-not-allowed transition-colors text-base"
+                    className="mt-4 w-full bg-accent-primary text-white font-bold py-2.5 px-4 rounded-xl hover:bg-accent-secondary disabled:bg-bg-tertiary disabled:text-text-secondary disabled:cursor-not-allowed transition-colors text-sm"
                 >
                     {isLoading ? 'Gerando...' : 'Gerar Roteiro'}
                 </motion.button>
@@ -839,8 +850,8 @@ const AiScriptScreen: React.FC<{ user: AppUser; setScreen: (s: Screen) => void }
                     animate={{ opacity: 1, y: 0 }}
                     className="mt-6 bg-bg-secondary p-6 rounded-xl w-full"
                 >
-                    <h2 className="text-xl font-bold mb-3">Seu Roteiro:</h2>
-                    <div className="prose prose-sm max-w-none text-text-primary" dangerouslySetInnerHTML={{ __html: script }} />
+                    <h2 className="text-lg font-bold mb-3">Seu Roteiro:</h2>
+                    <div className="prose max-w-none text-text-primary text-xs" dangerouslySetInnerHTML={{ __html: script }} />
                 </motion.div>
             )}
         </div>
@@ -861,10 +872,10 @@ const AcademyScreen = () => {
             initial="hidden"
             animate="visible"
         >
-            <h1 className="text-3xl font-bold text-center text-text-primary">Creator Academy</h1>
+            <h1 className="text-2xl font-bold text-center text-text-primary">Creator Academy</h1>
             
             <motion.div variants={itemVariants}>
-                <h2 className="text-2xl font-bold mb-4">Recursos Essenciais</h2>
+                <h2 className="text-xl font-bold mb-4">Recursos Essenciais</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {resources.map((res) => (
                          <motion.div
@@ -875,7 +886,7 @@ const AcademyScreen = () => {
                             <Card onClick={() => window.open(res.href, '_blank')} className="!p-5">
                                 <div className="flex items-center">
                                     <res.icon size={22} className="text-accent-primary mr-3" />
-                                    <h3 className="font-bold text-base">{res.name}</h3>
+                                    <h3 className="font-bold text-sm">{res.name}</h3>
                                 </div>
                             </Card>
                         </motion.div>
@@ -884,7 +895,7 @@ const AcademyScreen = () => {
             </motion.div>
 
             <motion.div variants={itemVariants}>
-                <h2 className="text-2xl font-bold mb-4">Nossos Cursos</h2>
+                <h2 className="text-xl font-bold mb-4">Nossos Cursos</h2>
                 <motion.div 
                     className="space-y-3"
                     variants={containerVariants}
@@ -898,8 +909,8 @@ const AcademyScreen = () => {
                              <Card className="!p-3 flex items-center space-x-4">
                                  <img src={lesson.thumbnailUrl} alt={lesson.title} className="w-24 h-16 object-cover rounded-lg" />
                                  <div className="flex-1">
-                                     <h3 className="font-bold text-base">{lesson.title}</h3>
-                                     <p className="text-sm text-text-secondary">{lesson.duration}</p>
+                                     <h3 className="font-bold text-sm">{lesson.title}</h3>
+                                     <p className="text-xs text-text-secondary">{lesson.duration}</p>
                                  </div>
                              </Card>
                         </motion.div>
@@ -925,14 +936,14 @@ const ApoioScreen: React.FC<{ user: AppUser, showNotification: (msg: string) => 
 
     return (
         <div className="max-w-2xl mx-auto flex flex-col items-center text-center">
-            <h1 className="text-3xl font-bold mb-2 text-text-primary flex items-center gap-2"><Heart className="text-accent-primary" />Apoie o Oyasify</h1>
-            <p className="text-text-secondary mb-6 text-base">Seu apoio é fundamental para a evolução contínua do projeto!</p>
+            <h1 className="text-2xl font-bold mb-2 text-text-primary flex items-center gap-2"><Heart className="text-accent-primary" />Apoie o Oyasify</h1>
+            <p className="text-text-secondary mb-6 text-sm">Seu apoio é fundamental para a evolução contínua do projeto!</p>
             
             <Card className="w-full p-6">
                 {user.isSupporter ? (
                     <div className="text-center">
                         <Crown size={48} className="mx-auto text-yellow-500 mb-3" />
-                        <h2 className="text-xl font-bold">Obrigado por ser um Apoiador!</h2>
+                        <h2 className="text-lg font-bold">Obrigado por ser um Apoiador!</h2>
                         <p className="text-text-secondary mt-1">Você tem acesso ao tema exclusivo e a futuros benefícios!</p>
                     </div>
                 ) : (
@@ -941,7 +952,7 @@ const ApoioScreen: React.FC<{ user: AppUser, showNotification: (msg: string) => 
                         <motion.button 
                             whileTap={{ scale: 0.95 }} whileHover={{y: -2}}
                             onClick={() => window.open('https://pay.kiwify.com.br/BAp0lC8', '_blank')}
-                            className="w-full bg-accent-primary text-white font-bold py-3 px-4 rounded-xl hover:bg-accent-secondary transition-colors text-base"
+                            className="w-full bg-accent-primary text-white font-bold py-2.5 px-4 rounded-xl hover:bg-accent-secondary transition-colors text-sm"
                         >
                             Apoie aqui
                         </motion.button>
@@ -950,7 +961,7 @@ const ApoioScreen: React.FC<{ user: AppUser, showNotification: (msg: string) => 
                             whileTap={{ scale: 0.95 }} whileHover={{y: -2}}
                             onClick={handleRequestSupporter}
                             disabled={hasRequested}
-                            className="w-full bg-bg-tertiary text-text-primary font-bold py-3 px-4 rounded-xl hover:bg-accent-primary/20 disabled:bg-bg-tertiary disabled:text-text-secondary disabled:cursor-not-allowed transition-colors text-base"
+                            className="w-full bg-bg-tertiary text-text-primary font-bold py-2.5 px-4 rounded-xl hover:bg-accent-primary/20 disabled:bg-bg-tertiary disabled:text-text-secondary disabled:cursor-not-allowed transition-colors text-sm"
                         >
                             {hasRequested ? 'Pedido Enviado' : 'Já apoiei! Liberar cargo'}
                         </motion.button>
@@ -964,13 +975,13 @@ const ApoioScreen: React.FC<{ user: AppUser, showNotification: (msg: string) => 
 
 const SupportScreen: React.FC = () => (
     <div className="max-w-2xl mx-auto flex flex-col items-center text-center">
-        <h1 className="text-3xl font-bold mb-2 text-text-primary flex items-center gap-2"><HelpCircle className="text-accent-primary" />Suporte</h1>
-        <p className="text-text-secondary mb-6 text-base">Precisa de ajuda ou tem alguma dúvida? Fale conosco!</p>
+        <h1 className="text-2xl font-bold mb-2 text-text-primary flex items-center gap-2"><HelpCircle className="text-accent-primary" />Suporte</h1>
+        <p className="text-text-secondary mb-6 text-sm">Precisa de ajuda ou tem alguma dúvida? Fale conosco!</p>
         <Card className="w-full p-6">
             <motion.button
                 whileTap={{ scale: 0.95 }} whileHover={{ y: -2 }}
                 onClick={() => window.open('https://w.app/oyasuai', '_blank')}
-                className="w-full bg-green-500 text-white font-bold py-3 px-4 rounded-xl hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-green-500 text-white font-bold py-2.5 px-4 rounded-xl hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-message-circle"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></svg>
                 Fale Conosco no WhatsApp
@@ -1106,7 +1117,7 @@ const OyasifyAIScreen: React.FC<{onImageClick: (url: string) => void}> = ({onIma
 
     return (
         <div className="h-full flex flex-col max-w-2xl mx-auto">
-            <h1 className="text-2xl font-bold text-center text-text-primary mb-3 flex-shrink-0">Oyasify AI</h1>
+            <h1 className="text-xl font-bold text-center text-text-primary mb-3 flex-shrink-0">Oyasify AI</h1>
             <div className="flex-1 flex flex-col bg-bg-secondary rounded-2xl shadow-md overflow-hidden">
                 <div className="flex-1 p-3 overflow-y-auto space-y-3 overscroll-contain">
                     {messages.map(msg => <ChatBubble key={msg.id} message={msg} onImageClick={onImageClick} />)}
@@ -1169,7 +1180,14 @@ const AudioCallModal: React.FC<{
                 if (audioOut.length > 0) setSelectedAudioOutput(audioOut[0].deviceId);
 // Fix: The caught error `e` is of type `unknown`. Cast to a string to allow logging with console.error, ensuring consistency with other error handlers in the file.
 // FIX: Changed multi-argument console.error to a single template literal for consistency.
-            } catch (e) { console.error(`Error enumerating devices: ${String(e)}`); }
+            } catch (e) {
+                // FIX: Improved error handling to check for Error instance.
+                if (e instanceof Error) {
+                    console.error(`Error enumerating devices: ${e.message}`);
+                } else {
+                    console.error(`An unknown error occurred while enumerating devices: ${String(e)}`);
+                }
+            }
         };
         setupDevices();
     }, []);
@@ -1188,7 +1206,12 @@ const AudioCallModal: React.FC<{
                 localStreamRef.current = stream;
             } catch (e) { 
 // FIX: Changed multi-argument console.error to a single template literal for consistency.
-                console.error(`Error getting user media: ${String(e)}`); 
+                // FIX: Improved error handling to check for Error instance.
+                if (e instanceof Error) {
+                    console.error(`Error getting user media: ${e.message}`);
+                } else {
+                    console.error(`An unknown error occurred while getting user media: ${String(e)}`);
+                }
             }
         };
         getMedia();
@@ -1202,7 +1225,14 @@ const AudioCallModal: React.FC<{
                     await (remoteAudioRef.current as any).setSinkId(selectedAudioOutput);
 // Fix: The caught error `e` is of type `unknown`. Cast to a string to allow logging with console.error, ensuring consistency with other error handlers in the file.
 // FIX: Changed multi-argument console.error to a single template literal for consistency.
-                } catch (e) { console.error(`Error setting sink ID: ${String(e)}`); }
+                } catch (e) {
+                    // FIX: Improved error handling to check for Error instance.
+                    if (e instanceof Error) {
+                        console.error(`Error setting sink ID: ${e.message}`);
+                    } else {
+                        console.error(`An unknown error occurred while setting sink ID: ${String(e)}`);
+                    }
+                }
             }
         };
         setSink();
@@ -1285,11 +1315,11 @@ const AudioCallModal: React.FC<{
             <div className="flex flex-col items-center justify-center p-4">
                 <audio ref={remoteAudioRef} autoPlay />
                 <img src={friend.avatarUrl} alt={friend.name} className="w-24 h-24 rounded-full mb-4" />
-                <p className="font-bold text-lg">{friend.name}</p>
-                <p className="text-text-secondary capitalize text-sm">{callStatus === 'idle' ? 'Pronto para chamar' : callStatus}</p>
+                <p className="font-bold text-base">{friend.name}</p>
+                <p className="text-text-secondary capitalize text-xs">{callStatus === 'idle' ? 'Pronto para chamar' : callStatus}</p>
             </div>
             
-            <div className="space-y-2 text-sm">
+            <div className="space-y-2 text-xs">
                 <div>
                     <label className="block text-text-secondary mb-1">Microfone:</label>
                     <select value={selectedAudioInput} onChange={e => setSelectedAudioInput(e.target.value)} className="w-full p-2 bg-bg-tertiary rounded-md focus:outline-none ring-accent-primary focus:ring-2">
@@ -1304,9 +1334,9 @@ const AudioCallModal: React.FC<{
                 </div>
             </div>
             <div className="mt-4 flex gap-3">
-                <motion.button whileTap={{scale:0.95}} onClick={callFriend} disabled={callStatus !== 'idle'} className="flex-1 p-2.5 bg-green-500 text-white rounded-lg font-semibold disabled:bg-gray-400">Ligar</motion.button>
-                <motion.button whileTap={{scale:0.95}} onClick={answerCall} disabled={callStatus !== 'idle'} className="flex-1 p-2.5 bg-blue-500 text-white rounded-lg font-semibold disabled:bg-gray-400">Atender</motion.button>
-                <motion.button whileTap={{scale:0.95}} onClick={hangup} disabled={callStatus === 'idle' || callStatus === 'ended'} className="flex-1 p-2.5 bg-danger text-white rounded-lg font-semibold disabled:bg-gray-400">Desligar</motion.button>
+                <motion.button whileTap={{scale:0.95}} onClick={callFriend} disabled={callStatus !== 'idle'} className="flex-1 p-2.5 bg-green-500 text-white rounded-lg font-semibold disabled:bg-gray-400 text-sm">Ligar</motion.button>
+                <motion.button whileTap={{scale:0.95}} onClick={answerCall} disabled={callStatus !== 'idle'} className="flex-1 p-2.5 bg-blue-500 text-white rounded-lg font-semibold disabled:bg-gray-400 text-sm">Atender</motion.button>
+                <motion.button whileTap={{scale:0.95}} onClick={hangup} disabled={callStatus === 'idle' || callStatus === 'ended'} className="flex-1 p-2.5 bg-danger text-white rounded-lg font-semibold disabled:bg-gray-400 text-sm">Desligar</motion.button>
             </div>
              <p className="text-xs text-text-secondary text-center mt-2">Esta é uma demonstração. A sinalização é simulada via prompts.</p>
         </Modal>
@@ -1367,7 +1397,7 @@ const ChatView: React.FC<{ friend: Friend, chat: Chat, onBack: () => void, onUpd
                 <motion.button whileTap={{scale:0.9}} onClick={() => { playSound('click'); onBack(); }} className="mr-2 p-2 rounded-full hover:bg-bg-tertiary text-text-secondary">&larr;</motion.button>
                 <img src={friend.avatarUrl} className="w-9 h-9 rounded-full" />
                 <div className="ml-3 flex-1">
-                    <h2 className="font-bold text-base leading-tight">{friend.name}</h2>
+                    <h2 className="font-bold text-sm leading-tight">{friend.name}</h2>
                     {chat.isAiActive && <p className="text-xs text-accent-primary font-semibold leading-tight flex items-center gap-1"><Sparkles size={12}/> AI Ativa</p>}
                 </div>
                 <motion.button whileTap={{scale:0.9}} onClick={() => { playSound('click'); onStartAudioCall(friend); }} className="p-2 rounded-full hover:bg-bg-tertiary text-text-secondary">
@@ -1448,7 +1478,7 @@ const ProfileView: React.FC<{ user: AppUser, setUser: (user: AppUser) => void, s
                         </motion.button>
                          <input type="file" accept="image/*" ref={fileInputRef} onChange={handleAvatarChange} className="hidden" />
                     </div>
-                    <h2 className="text-2xl font-bold mt-2">{user.name}</h2>
+                    <h2 className="text-xl font-bold mt-2">{user.name}</h2>
                     <p className="text-text-secondary max-w-sm text-sm mt-1">{user.bio}</p>
                 </div>
             </Card>
@@ -1469,7 +1499,7 @@ const ProfileView: React.FC<{ user: AppUser, setUser: (user: AppUser) => void, s
                         <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full p-1.5 bg-bg-tertiary rounded-md focus:outline-none focus:ring-2 ring-accent-primary text-sm"/>
                         <button onClick={handleSaveName} className="px-2.5 bg-accent-primary text-white rounded-md font-semibold text-xs">Salvar</button>
                     </div>
-                ): <p className="font-bold text-base mt-1">{user.name}</p>}
+                ): <p className="font-bold text-sm mt-1">{user.name}</p>}
             </Card>
              <Card className="!p-5">
                 <div className="flex justify-between items-center">
@@ -1481,11 +1511,11 @@ const ProfileView: React.FC<{ user: AppUser, setUser: (user: AppUser) => void, s
                          <textarea value={bio} onChange={e => setBio(e.target.value)} className="w-full p-1.5 h-16 bg-bg-tertiary rounded-md focus:outline-none focus:ring-2 ring-accent-primary resize-none text-sm"/>
                          <button onClick={handleSaveBio} className="px-2.5 bg-accent-primary text-white rounded-md font-semibold text-xs">Salvar</button>
                      </div>
-                 ) : <p className="font-bold text-base mt-1">{user.bio}</p>}
+                 ) : <p className="font-bold text-sm mt-1">{user.bio}</p>}
             </Card>
 
             <Card className="!p-5">
-                <h3 className="text-lg font-bold mb-3">Tema Visual</h3>
+                <h3 className="text-base font-bold mb-3">Tema Visual</h3>
                 <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
                     {THEMES.filter(t => t.key !== 'apoiador' || user.isSupporter).map(t => {
                         const Icon = THEME_ICONS[t.key] || Palette;
@@ -1621,8 +1651,8 @@ const FriendsChatScreen: React.FC<{ currentUser: AppUser, showNotification: (msg
                                          <span className={`absolute bottom-0 right-0 block h-3 w-3 rounded-full ${friend.online ? 'bg-status-online' : 'bg-status-offline'} border-2 border-bg-secondary`}></span>
                                      </div>
                                      <div className="ml-3">
-                                         <p className="font-bold text-base">{friend.name}</p>
-                                         <p className="text-sm text-text-secondary">{friend.online ? 'Online' : 'Offline'}</p>
+                                         <p className="font-bold text-sm">{friend.name}</p>
+                                         <p className="text-xs text-text-secondary">{friend.online ? 'Online' : 'Offline'}</p>
                                      </div>
                                  </Card>
                                  </motion.div>
@@ -1634,7 +1664,7 @@ const FriendsChatScreen: React.FC<{ currentUser: AppUser, showNotification: (msg
                                 <Card className="!p-3 flex items-center justify-between">
                                     <div className="flex items-center">
                                         <img src={req.from.avatarUrl} className="w-12 h-12 rounded-full mr-3" />
-                                        <p className="font-semibold text-base">{req.from.name}</p>
+                                        <p className="font-semibold text-sm">{req.from.name}</p>
                                     </div>
                                     <div className="flex gap-2">
                                          <motion.button whileTap={{scale:0.9}} onClick={() => { playSound('click'); handleAcceptRequest(req);}} className="p-2.5 bg-green-500/10 text-green-600 rounded-full"><Check size={18} strokeWidth={3}/></motion.button>
@@ -1642,7 +1672,7 @@ const FriendsChatScreen: React.FC<{ currentUser: AppUser, showNotification: (msg
                                     </div>
                                 </Card>
                                 </motion.div>
-                            )) : <p className="text-center text-text-secondary mt-8 text-base">Nenhum pedido de amizade.</p>
+                            )) : <p className="text-center text-text-secondary mt-8 text-sm">Nenhum pedido de amizade.</p>
                          )}
                          {subView === 'add' && (
                             <div>
@@ -1652,7 +1682,7 @@ const FriendsChatScreen: React.FC<{ currentUser: AppUser, showNotification: (msg
                                         placeholder="Pesquisar usuário por nome..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full p-3 pl-10 bg-bg-tertiary rounded-lg focus:outline-none focus:ring-2 ring-accent-primary text-base"
+                                        className="w-full p-3 pl-10 bg-bg-tertiary rounded-lg focus:outline-none focus:ring-2 ring-accent-primary text-sm"
                                     />
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" size={20}/>
                                 </div>
@@ -1666,7 +1696,7 @@ const FriendsChatScreen: React.FC<{ currentUser: AppUser, showNotification: (msg
                                                      <div className="flex items-center">
                                                          <img src={user.avatarUrl} className="w-12 h-12 rounded-full mr-3" />
                                                          <div>
-                                                             <p className="font-semibold text-base">{user.name}</p>
+                                                             <p className="font-semibold text-sm">{user.name}</p>
                                                              <p className="text-xs text-text-secondary">{user.bio}</p>
                                                          </div>
                                                      </div>
@@ -1682,7 +1712,7 @@ const FriendsChatScreen: React.FC<{ currentUser: AppUser, showNotification: (msg
                                             )
                                         })
                                     ) : searchQuery.trim() !== '' && (
-                                         <p className="text-center text-text-secondary mt-8 text-base">Nenhum usuário encontrado.</p>
+                                         <p className="text-center text-text-secondary mt-8 text-sm">Nenhum usuário encontrado.</p>
                                     )}
                                 </motion.div>
                             </div>
