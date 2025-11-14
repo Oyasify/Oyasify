@@ -1,5 +1,5 @@
 
-export type Screen = 'home' | 'vocal' | 'ai-script' | 'profile' | 'academy' | 'apoio' | 'oyasify-ai' | 'suporte';
+export type Screen = 'home' | 'curso-de-canto' | 'ai-script' | 'profile' | 'academy' | 'apoio' | 'oyasify-ai' | 'suporte' | 'seja-um-artista' | 'crie-sua-letra';
 
 export interface User {
   id: number;

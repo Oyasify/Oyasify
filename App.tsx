@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -6,11 +7,10 @@ import {
 import { 
     THEMES, initialFriends, chats as initialChats, ACADEMY_LESSONS, initialUsersForDiscovery, OWNER_CREDENTIALS 
 } from './constants';
-// Fix: Corrected typo in function name from chatWithOyasi-fyAI to chatWithOyasifyAI to resolve import errors.
-import { generateScript, chatWithOyasifyAI, generateImageWithOyasifyAI } from './services/geminiService';
+import { generateScript, chatWithOyasifyAI, generateImageWithOyasifyAI, generateLyrics } from './services/geminiService';
 import { 
     Home, Mic, User as UserIcon, GraduationCap, Send, Plus, Paperclip, LogOut,
-    X, Bell, Palette, Download, Link as LinkIcon, Heart, Shield, Crown, Flower2, Rocket, Sparkles, Pencil, MessageSquare, Droplet, Flame, Gem, Leaf, MicOff, Play, Pause, Check, Users, Search, Phone, HelpCircle, ClipboardCopy
+    X, Bell, Palette, Download, Link as LinkIcon, Heart, Crown, Flower2, Rocket, Sparkles, Pencil, MessageSquare, Droplet, Flame, Gem, Leaf, MicOff, Play, Pause, Check, Users, Search, Phone, HelpCircle, ClipboardCopy, Music
 } from 'lucide-react';
 
 // --- Local Storage Hooks ---
@@ -21,7 +21,8 @@ const useLocalStorage = <T,>(key: string, initialValue: T): [T, (value: T | ((va
             return item ? JSON.parse(item) : initialValue;
         } catch (error) {
             // Fix: The caught error is of type 'unknown'. Cast to 'any' to log it.
-            console.error(String(error));
+            // FIX: Using template literal for descriptive error logging to resolve linter error.
+            console.error(`Error reading from localStorage for key "${key}": ${String(error)}`);
             return initialValue;
         }
     });
@@ -33,7 +34,8 @@ const useLocalStorage = <T,>(key: string, initialValue: T): [T, (value: T | ((va
             window.localStorage.setItem(key, JSON.stringify(valueToStore));
         } catch (error) {
             // Fix: The caught error is of type 'unknown'. Cast to 'any' to log it.
-            console.error(String(error));
+            // FIX: Using template literal for descriptive error logging to resolve linter error.
+            console.error(`Error writing to localStorage for key "${key}": ${String(error)}`);
         }
     };
     return [storedValue, setValue];
@@ -69,20 +71,27 @@ const playSound = (type: 'click' | 'notification' | 'sent' | 'start_recording' |
         case 'start_recording':
         case 'cancel_recording':
         default:
-            soundFile = 'data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZ4JFdpKgdHVkXY8gAR//LgAAAAAAAAAAAABQTEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV-AAVERpqgA9QAL/8AAB//4gAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
+            soundFile = 'data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZ4JFdpKgdHVkXY8gAR//LgAAAAAAAAAAAABQTEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV-AAVERpqgA9QAL/8AAB//4gAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
             break;
     }
-    // FIX: Replaced multi-argument console.error with a template literal to ensure a single string argument, preventing potential type errors with strict linting rules.
-    new Audio(soundFile).play().catch(e => console.error(`Error playing sound: ${String(e)}`));
+    // FIX: Refactored to handle promise rejection errors more explicitly, preventing a potential toolchain issue with the ternary operator.
+    new Audio(soundFile).play().catch(e => {
+        if (e instanceof Error) {
+            console.error(`Error playing sound: ${e.message}`);
+        } else {
+            console.error(`An unknown error occurred while playing sound: ${String(e)}`);
+        }
+    });
 };
 
 // --- New Logo Component ---
 const LogoIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-        <path d="M20 5C20 5 28.3333 6.66667 35 11.6667C35 21.6667 29.1667 31.6667 20 35C10.8333 31.6667 5 21.6667 5 11.6667C11.6667 6.66667 20 5 20 5Z" fill="currentColor" fillOpacity="0.2"/>
-        <path d="M20 5C20 5 28.3333 6.66667 35 11.6667C35 21.6667 29.1667 31.6667 20 35V5Z" fill="currentColor"/>
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className={className}>
+        <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM11 17.91C10.53 17.97 10.04 18 9.5 18C7.57 18 6 16.43 6 14.5C6 12.57 7.57 11 9.5 11C11.43 11 13 12.57 13 14.5V15.17C15.31 14.41 17.35 12.68 18.36 10.45L18.41 10.33C18.63 9.83 18.28 9.25 17.71 9.25H14V7.5C14 6.67 13.33 6 12.5 6C11.67 6 11 6.67 11 7.5V17.91Z" opacity="0.4"/>
+        <path d="M12.5 6C13.33 6 14 6.67 14 7.5V9.25H17.71C18.28 9.25 18.63 9.83 18.41 10.33L18.36 10.45C17.35 12.68 15.31 14.41 13 15.17V14.5C13 12.57 11.43 11 9.5 11C7.57 11 6 12.57 6 14.5C6 16.43 7.57 18 9.5 18C10.04 18 10.53 17.97 11 17.91V7.5C11 6.67 11.67 6 12.5 6Z"/>
     </svg>
 );
+
 
 // --- Theme Context ---
 const ThemeContext = createContext({
@@ -158,7 +167,7 @@ const Auth: React.FC<{ onLogin: (session: any) => void }> = ({ onLogin }) => {
                 password: OWNER_CREDENTIALS.password,
                 bio: 'Criador do Oyasify.',
                 role: 'owner' as const,
-                theme: 'oceano',
+                theme: 'sintonia',
                 isSupporter: true,
             };
             setUsers([ownerUser, ...initialUsersWithPasswords]);
@@ -194,7 +203,7 @@ const Auth: React.FC<{ onLogin: (session: any) => void }> = ({ onLogin }) => {
             avatarUrl: `https://i.pravatar.cc/150?u=${email}`,
             bio: 'Novo criador no Oyasify!',
             role: 'user',
-            theme: 'oceano',
+            theme: 'sintonia',
             isSupporter: false,
         };
         setUsers([...users, { ...newUser, password }]);
@@ -552,25 +561,25 @@ const HomeScreen: React.FC<{ user: AppUser, setScreen: (s: Screen) => void }> = 
         >
             <Card className="text-left p-6">
                 <div className="flex items-center mb-3">
-                    <h2 className="text-2xl font-bold text-text-primary">🚀 Oyasify Academy</h2>
+                    <h2 className="text-2xl font-bold text-text-primary">🎙️ Seja um Artista</h2>
                 </div>
                 <p className="text-text-secondary mb-5 text-base">
-                    Acesse cursos e conteúdos exclusivos para evoluir no mundo musical, crescer online e monetizar seu talento.
+                    Aprenda técnicas essenciais e descubra estratégias para construir sua carreira musical no universo geek.
                 </p>
                 <motion.button 
                     whileTap={{ scale: 0.95 }} 
                     whileHover={{ y: -2 }}
                     className="w-full p-3 bg-accent-primary text-white font-bold rounded-xl hover:bg-accent-secondary transition-colors flex items-center justify-center text-base"
-                    onClick={(e) => { e.stopPropagation(); playSound('click'); setScreen('academy'); }}
+                    onClick={(e) => { e.stopPropagation(); playSound('click'); setScreen('seja-um-artista'); }}
                 >
-                    <GraduationCap size={20} className="mr-2"/> Academy
+                    🎧 Artista
                 </motion.button>
             </Card>
         </motion.div>
     </div>
 );
 
-const VocalScreen: React.FC = () => (
+const CursoDeCantoScreen: React.FC = () => (
      <motion.div 
         className="space-y-4 max-w-2xl mx-auto"
         variants={containerVariants}
@@ -620,6 +629,136 @@ const VocalScreen: React.FC = () => (
     </motion.div>
 );
 
+const SejaUmArtistaScreen: React.FC = () => (
+    <motion.div 
+        className="space-y-4 max-w-2xl mx-auto"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+    >
+        <h1 className="text-2xl font-bold text-center text-text-primary">Seja um Artista</h1>
+        
+        <motion.div variants={itemVariants}>
+            <Card className="!p-5">
+                <h2 className="text-lg font-bold text-text-primary mb-2">A Importância do Canto</h2>
+                <p className="text-text-secondary text-sm leading-relaxed">
+                    Cantar é mais do que apenas produzir sons agradáveis; é uma forma de expressão universal que conecta emoções e histórias. Para um artista, dominar o canto é a chave para transmitir sua mensagem de forma autêntica e impactante, criando uma conexão profunda com o público.
+                </p>
+            </Card>
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+            <Card className="!p-5">
+                <h2 className="text-lg font-bold text-text-primary mb-2">Técnicas Essenciais</h2>
+                <ul className="text-text-secondary text-sm list-disc list-inside space-y-2">
+                    <li><strong>Respiração Diafragmática:</strong> A base de um canto poderoso e controlado. Pratique respirar fundo, expandindo a barriga, para sustentar notas longas e manter a afinação.</li>
+                    <li><strong>Apoio Vocal:</strong> Use os músculos do abdômen e das costas para apoiar sua voz, evitando forçar a garganta. Isso resulta em um som mais rico e previne lesões.</li>
+                    <li><strong>Ressonância:</strong> Explore os espaços de ressonância do seu corpo (peito, boca, nariz e cabeça) para amplificar seu som naturalmente e adicionar timbre e cor à sua voz.</li>
+                    <li><strong>Articulação:</strong> Cante com clareza, articulando bem as palavras. Isso garante que sua mensagem seja entendida e adiciona profissionalismo à sua performance.</li>
+                </ul>
+            </Card>
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+            <Card className="!p-5">
+                <h2 className="text-lg font-bold text-text-primary mb-2">Como Crescer seu Canal de Música Geek/Rap</h2>
+                <p className="text-text-secondary text-sm leading-relaxed">
+                    Criar um canal de sucesso no nicho geek vai além do talento musical. Conecte-se com sua comunidade, entenda as referências e crie conteúdo que ressoe com a paixão dos fãs. Faça covers de animes, crie raps sobre personagens de jogos, e participe de trends. A consistência, a qualidade de áudio/vídeo e a interação genuína nos comentários são seus maiores aliados para construir uma base de fãs leal e engajada.
+                </p>
+            </Card>
+        </motion.div>
+    </motion.div>
+);
+
+const CrieSuaLetraScreen: React.FC = () => {
+    const [idea, setIdea] = useState('');
+    const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
+    const [lyrics, setLyrics] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const styles = ["Rap de anime", "Melódica", "Funk", "Phonk", "Hip Hop", "Samba", "Pagode", "Brazilian Phonk", "Trap", "Acústico", "Remix", "Rap Geek em geral"];
+
+    const handleGenerate = useCallback(async () => {
+        if (!idea.trim()) return;
+        setIsLoading(true);
+        setLyrics(null);
+        try {
+            const result = await generateLyrics(idea, selectedStyle || undefined);
+            setLyrics(result);
+        } catch (error) {
+            // FIX: Added more descriptive error logging.
+            console.error(`Error generating lyrics: ${String(error)}`);
+            setLyrics("<h2>Erro</h2><p>Algo deu errado. Por favor, tente novamente.</p>");
+        }
+        setIsLoading(false);
+    }, [idea, selectedStyle]);
+
+    const toggleStyle = (style: string) => {
+        setSelectedStyle(prev => prev === style ? null : style);
+    };
+
+    return (
+        <div className="max-w-2xl mx-auto flex flex-col items-center">
+            <h1 className="text-3xl font-bold mb-1 text-text-primary flex items-center gap-2"><Pencil className="text-accent-primary" />Crie sua Letra</h1>
+            <p className="text-text-secondary mb-6 text-center max-w-lg text-base">
+                Receba ideias de letras profissionais. A IA gerará uma base de alta qualidade para sua próxima música, independente do estilo.
+            </p>
+            
+            <Card className="w-full p-6">
+                <label className="font-semibold text-text-primary mb-2 block text-base">Sua ideia para a música</label>
+                <textarea
+                    value={idea}
+                    onChange={(e) => setIdea(e.target.value)}
+                    placeholder="Ex: Uma música sobre a jornada de um herói que perdeu tudo."
+                    className="w-full h-28 p-3 bg-bg-tertiary rounded-lg focus:outline-none focus:ring-2 ring-accent-primary resize-none text-text-primary text-sm"
+                />
+
+                <label className="font-semibold text-text-primary mt-4 mb-2 block text-base">Estilo (opcional)</label>
+                 <div className="flex flex-wrap gap-2">
+                    {styles.map(style => (
+                        <motion.button
+                            key={style}
+                            onClick={() => toggleStyle(style)}
+                            whileTap={{ scale: 0.95 }}
+                            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${selectedStyle === style ? 'bg-accent-primary text-white' : 'bg-bg-tertiary text-text-secondary'}`}
+                        >
+                            {style}
+                        </motion.button>
+                    ))}
+                </div>
+
+                <motion.button
+                    onClick={() => { playSound('click'); handleGenerate(); }}
+                    disabled={isLoading || !idea.trim()}
+                    whileTap={{ scale: 0.98 }} whileHover={{y: -2}}
+                    className="mt-5 w-full bg-accent-primary text-white font-bold py-3 px-4 rounded-xl hover:bg-accent-secondary disabled:bg-bg-tertiary disabled:text-text-secondary disabled:cursor-not-allowed transition-colors text-base"
+                >
+                    {isLoading ? 'Gerando...' : 'Gerar'}
+                </motion.button>
+            </Card>
+
+            {isLoading && (
+                <div className="flex justify-center items-center mt-6 space-x-1.5">
+                    <motion.span className="w-2 h-2 bg-accent-primary rounded-full" animate={{ y: [0, -6, 0] }} transition={{ duration: 0.5, repeat: Infinity, ease: 'easeInOut' }} />
+                    <motion.span className="w-2 h-2 bg-accent-primary rounded-full" animate={{ y: [0, -6, 0] }} transition={{ duration: 0.5, delay: 0.1, repeat: Infinity, ease: 'easeInOut' }} />
+                    <motion.span className="w-2 h-2 bg-accent-primary rounded-full" animate={{ y: [0, -6, 0] }} transition={{ duration: 0.5, delay: 0.2, repeat: Infinity, ease: 'easeInOut' }} />
+                </div>
+            )}
+
+            {lyrics && (
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-6 bg-bg-secondary p-6 rounded-xl w-full"
+                >
+                    <div className="prose max-w-none text-text-primary text-sm" dangerouslySetInnerHTML={{ __html: lyrics }} />
+                </motion.div>
+            )}
+        </div>
+    );
+};
+
+
 const BecomeSupporterForScriptScreen: React.FC<{ setScreen: (s: Screen) => void }> = ({ setScreen }) => (
     <div className="max-w-md mx-auto flex flex-col items-center text-center">
         <h1 className="text-2xl font-bold mb-1 text-text-primary flex items-center gap-2"><Crown className="text-yellow-500" /> Acesso Exclusivo</h1>
@@ -652,7 +791,8 @@ const AiScriptScreen: React.FC<{ user: AppUser; setScreen: (s: Screen) => void }
             setScript(result);
         } catch (error) {
             // Fix: The caught error is of type 'unknown'. Cast to a string to log it.
-            console.error(String(error));
+            // FIX: Replaced with a template literal for more descriptive error logging.
+            console.error(`Error generating script: ${String(error)}`);
             setScript("<h2>Erro</h2><p>Algo deu errado. Por favor, verifique o console para mais detalhes.</p>");
         }
         setIsLoading(false);
@@ -1203,7 +1343,7 @@ const ChatView: React.FC<{ friend: Friend, chat: Chat, onBack: () => void, onUpd
     
         if (shouldQueryAI) {
             if(triggerAI && !chat.isAiActive) {
-                const systemMessage: Message = { id: Date.now() + 1, type: 'system', content: 'Oyasify AI entrou no chat.', senderId: 'ai', timestamp: '' };
+                const systemMessage: Message = { id: Date.now() + 1, type: 'system', content: 'Oyasify AI entrou do chat.', senderId: 'ai', timestamp: '' };
                 currentChatState = { ...currentChatState, messages: [...currentChatState.messages, systemMessage] };
             }
 
@@ -1280,6 +1420,10 @@ const ProfileView: React.FC<{ user: AppUser, setUser: (user: AppUser) => void, s
     };
     
     const THEME_ICONS: {[key: string]: React.FC<any>} = {
+        sintonia: Music,
+        vinil: Palette,
+        neon: Rocket,
+        acustico: Leaf,
         rosa: Flower2,
         oceano: Droplet,
         solar: Flame,
@@ -1521,40 +1665,41 @@ const FriendsChatScreen: React.FC<{ currentUser: AppUser, showNotification: (msg
                                                  <Card className="!p-3 flex items-center justify-between">
                                                      <div className="flex items-center">
                                                          <img src={user.avatarUrl} className="w-12 h-12 rounded-full mr-3" />
-                                                         <p className="font-semibold text-base">{user.name}</p>
+                                                         <div>
+                                                             <p className="font-semibold text-base">{user.name}</p>
+                                                             <p className="text-xs text-text-secondary">{user.bio}</p>
+                                                         </div>
                                                      </div>
-                                                     <motion.button 
-                                                         whileTap={{scale: hasSentRequest ? 1 : 0.9}} 
-                                                         onClick={() => { if (!hasSentRequest) { handleSendRequest(user); } }} 
-                                                         disabled={hasSentRequest}
-                                                         className="p-2.5 rounded-full disabled:bg-bg-tertiary disabled:cursor-not-allowed enabled:bg-accent-primary/10 enabled:text-accent-primary transition-colors"
-                                                     >
-                                                        {hasSentRequest ? <Check size={18} strokeWidth={3} className="text-text-secondary"/> : <Plus size={18} strokeWidth={3}/>}
-                                                     </motion.button>
+                                                      <motion.button 
+                                                        whileTap={{scale:0.9}}
+                                                        onClick={() => handleSendRequest(user)} 
+                                                        disabled={hasSentRequest}
+                                                        className="p-2.5 bg-accent-primary/10 text-accent-primary rounded-full disabled:bg-bg-tertiary disabled:text-text-secondary">
+                                                        {hasSentRequest ? <Check size={18}/> : <Plus size={18}/>}
+                                                      </motion.button>
                                                  </Card>
                                                  </motion.div>
                                             )
                                         })
-                                    ) : (
-                                        searchQuery.trim() !== '' && <p className="text-center text-text-secondary mt-8 text-base">Nenhum usuário encontrado.</p>
+                                    ) : searchQuery.trim() !== '' && (
+                                         <p className="text-center text-text-secondary mt-8 text-base">Nenhum usuário encontrado.</p>
                                     )}
-                                     {searchQuery.trim() === '' && <p className="text-center text-text-secondary mt-8 text-base">Digite um nome para buscar um usuário.</p>}
                                 </motion.div>
                             </div>
                          )}
                      </motion.div>
                  </AnimatePresence>
              </div>
-        </div>
+         </div>
     );
 };
 
 const ProfileScreen: React.FC<{ user: AppUser, setUser: (user: AppUser) => void, showNotification: (msg: string) => void, onImageClick: (url: string) => void }> = ({ user, setUser, showNotification, onImageClick }) => {
     const [tab, setTab] = useState<'profile' | 'friends'>('profile');
-    
+
     return (
-        <div className="max-w-2xl mx-auto flex flex-col h-full">
-            <div className="border-b border-bg-tertiary/50 mb-4 flex-shrink-0">
+        <div className="h-full flex flex-col max-w-2xl mx-auto">
+            <div className="flex-shrink-0 border-b border-bg-tertiary/50 mb-4">
                 <nav className="-mb-px flex justify-center space-x-8" aria-label="Tabs">
                     <button onClick={() => { playSound('click'); setTab('profile'); }} className={`whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm ${tab === 'profile' ? 'border-accent-primary text-accent-primary' : 'border-transparent text-text-secondary hover:text-text-primary'}`}>
                         Perfil
@@ -1572,11 +1717,10 @@ const ProfileScreen: React.FC<{ user: AppUser, setUser: (user: AppUser) => void,
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        transition={{duration: 0.2}}
                         className="h-full"
                     >
-                        {tab === 'profile' && <ProfileView user={user} setUser={setUser} showNotification={showNotification} />}
-                        {tab === 'friends' && <FriendsChatScreen currentUser={user} showNotification={showNotification} onImageClick={onImageClick} />}
+                        {tab === 'profile' && <div className="overflow-y-auto h-full pr-1 -mr-2 overscroll-contain"><ProfileView user={user} setUser={setUser} showNotification={showNotification} /></div>}
+                        {tab === 'friends' && <FriendsChatScreen currentUser={user} showNotification={showNotification} onImageClick={onImageClick}/>}
                     </motion.div>
                 </AnimatePresence>
             </div>
@@ -1584,31 +1728,31 @@ const ProfileScreen: React.FC<{ user: AppUser, setUser: (user: AppUser) => void,
     );
 };
 
-const MainContent: React.FC<{ screen: Screen, user: AppUser, setUser: (user: AppUser) => void, showNotification: (msg: string) => void, setScreen: (s: Screen) => void, onImageClick: (url: string) => void }> = ({ screen, user, setUser, showNotification, setScreen, onImageClick }) => {
-    return (
-        <main className="flex-1 overflow-y-auto p-4 pb-20 overscroll-contain">
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={screen}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.2 }}
-                    className="h-full"
-                >
-                    {screen === 'home' && <HomeScreen user={user} setScreen={setScreen} />}
-                    {screen === 'vocal' && <VocalScreen />}
-                    {screen === 'ai-script' && <AiScriptScreen user={user} setScreen={setScreen} />}
-                    {screen === 'profile' && <ProfileScreen user={user} setUser={setUser} showNotification={showNotification} onImageClick={onImageClick} />}
-                    {screen === 'academy' && <AcademyScreen />}
-                    {screen === 'apoio' && <ApoioScreen user={user} showNotification={showNotification} />}
-                    {screen === 'oyasify-ai' && <OyasifyAIScreen onImageClick={onImageClick} />}
-                    {screen === 'suporte' && <SupportScreen />}
-                </motion.div>
-            </AnimatePresence>
-        </main>
-    );
-};
+const MainContent: React.FC<{ screen: Screen, user: AppUser, setUser: (user: AppUser) => void, showNotification: (msg: string) => void, setScreen: (s: Screen) => void, onImageClick: (url: string) => void }> = ({ screen, user, setUser, showNotification, setScreen, onImageClick }) => (
+    <main className="flex-1 overflow-y-auto p-4 pb-20 overscroll-contain">
+        <AnimatePresence mode="wait">
+            <motion.div
+                key={screen}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.2 }}
+                className="h-full"
+            >
+                {screen === 'home' && <HomeScreen user={user} setScreen={setScreen} />}
+                {screen === 'curso-de-canto' && <CursoDeCantoScreen />}
+                {screen === 'seja-um-artista' && <SejaUmArtistaScreen />}
+                {screen === 'crie-sua-letra' && <CrieSuaLetraScreen />}
+                {screen === 'ai-script' && <AiScriptScreen user={user} setScreen={setScreen} />}
+                {screen === 'profile' && <ProfileScreen user={user} setUser={setUser} showNotification={showNotification} onImageClick={onImageClick} />}
+                {screen === 'academy' && <AcademyScreen />}
+                {screen === 'apoio' && <ApoioScreen user={user} showNotification={showNotification} />}
+                {screen === 'oyasify-ai' && <OyasifyAIScreen onImageClick={onImageClick} />}
+                {screen === 'suporte' && <SupportScreen />}
+            </motion.div>
+        </AnimatePresence>
+    </main>
+);
 
 const Header: React.FC<{ onMenuClick: () => void, onNotificationsClick: () => void, user: AppUser }> = ({ onMenuClick, onNotificationsClick, user }) => {
     const [supporterRequests] = useLocalStorage('oyasify-supporter-requests', []);
@@ -1635,7 +1779,9 @@ const Drawer: React.FC<{ isOpen: boolean, setOpen: (isOpen: boolean) => void, us
 
     const navItems = [
         { screen: 'home', label: 'Início' },
-        { screen: 'vocal', label: 'Vocal' },
+        { screen: 'curso-de-canto', label: 'Curso de Canto' },
+        { screen: 'seja-um-artista', label: 'Seja um Artista' },
+        { screen: 'crie-sua-letra', label: 'Crie sua Letra' },
         { screen: 'academy', label: 'Academy' },
         { screen: 'ai-script', label: 'Roteiro AI' },
         { screen: 'oyasify-ai', label: 'Oyasify AI' },
@@ -1663,8 +1809,8 @@ const Drawer: React.FC<{ isOpen: boolean, setOpen: (isOpen: boolean) => void, us
                     className="absolute top-0 left-0 h-full w-72 bg-bg-secondary z-40 shadow-xl flex flex-col p-5 rounded-r-2xl"
                 >
                     <div className="flex items-center space-x-3 mb-6">
-                         <div className="w-12 h-12 rounded-full bg-bg-tertiary flex items-center justify-center text-accent-primary font-bold text-xl">
-                            {user.name.substring(0, 2).toUpperCase()}
+                         <div className="w-12 h-12 rounded-full bg-bg-tertiary flex items-center justify-center">
+                            <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover rounded-full" />
                         </div>
                         <div>
                             <p className="font-bold text-lg text-text-primary">{user.name}</p>
@@ -1733,8 +1879,8 @@ const NotificationsPanel: React.FC<{ user: AppUser, onClose: () => void }> = ({ 
 const BottomNav: React.FC<{ currentScreen: Screen, setScreen: (s: Screen) => void }> = ({ currentScreen, setScreen }) => {
     const navItems = [
         { screen: 'home', icon: Home },
-        { screen: 'vocal', icon: Mic },
-        { screen: 'ai-script', icon: Sparkles },
+        { screen: 'curso-de-canto', icon: Mic },
+        { screen: 'crie-sua-letra', icon: Pencil },
         { screen: 'profile', icon: UserIcon },
     ] as const;
 
@@ -1765,7 +1911,7 @@ const Application: React.FC<{ user: AppUser, onLogout: () => void }> = ({ user, 
     const [notification, setNotification] = useState<string | null>(null);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [globalNotification, setGlobalNotification] = useLocalStorage('oyasify-global-notification', { message: null, seen: true });
-    const [viewingImage, setViewingImage] = useState<string | null>(null);
+    const [viewedImageUrl, setViewedImageUrl] = useState<string | null>(null);
     
     const showNotification = (message: string) => {
         playSound('notification');
@@ -1810,7 +1956,7 @@ const Application: React.FC<{ user: AppUser, onLogout: () => void }> = ({ user, 
                         {notification}
                     </motion.div>
                 )}
-                 {viewingImage && <ImageViewerModal imageUrl={viewingImage} onClose={() => setViewingImage(null)} />}
+                {viewedImageUrl && <ImageViewerModal imageUrl={viewedImageUrl} onClose={() => setViewedImageUrl(null)} />}
             </AnimatePresence>
             
             <Drawer user={session.user} isOpen={isDrawerOpen} setOpen={setDrawerOpen} setScreen={handleSetScreen} onLogout={onLogout} currentScreen={screen} />
@@ -1829,7 +1975,7 @@ const Application: React.FC<{ user: AppUser, onLogout: () => void }> = ({ user, 
                     setUser={handleUpdateUser} 
                     showNotification={showNotification} 
                     setScreen={handleSetScreen} 
-                    onImageClick={setViewingImage} 
+                    onImageClick={setViewedImageUrl}
                 />
                 <BottomNav currentScreen={screen} setScreen={handleSetScreen} />
             </div>
@@ -1841,7 +1987,7 @@ const Application: React.FC<{ user: AppUser, onLogout: () => void }> = ({ user, 
 const App: React.FC = () => {
     const [session, setSession] = useLocalStorage<{ user: AppUser } | null>('oyasify-session', null);
     const [view, setView] = useState<'welcome' | 'auth'>('welcome');
-    const themeKey = session?.user?.theme || 'oceano';
+    const themeKey = session?.user?.theme || 'sintonia';
 
     const handleLogout = () => {
         setSession(null);

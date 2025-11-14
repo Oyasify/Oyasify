@@ -7,6 +7,86 @@ export const OWNER_CREDENTIALS = {
 
 export const THEMES: Theme[] = [
     {
+        key: 'sintonia',
+        name: 'Sintonia',
+        properties: {
+            '--body-gradient': 'linear-gradient(180deg, #1A1A2E 0%, #16213E 100%)',
+            '--bg-primary': '#16213E',
+            '--bg-secondary': '#1A1A2E',
+            '--bg-tertiary': '#222E50',
+            '--text-primary': '#E0E0E0',
+            '--text-secondary': '#A9A9A9',
+            '--accent-primary': '#0F3460',
+            '--accent-secondary': '#E94560',
+            '--status-online': '#57F287',
+            '--status-offline': '#747F8D',
+            '--danger': '#ED4245',
+            '--scrollbar-track': '#16213E',
+            '--scrollbar-thumb': '#E94560',
+        },
+        font: 'font-roboto-mono'
+    },
+    {
+        key: 'vinil',
+        name: 'Vinil',
+        properties: {
+            '--body-gradient': 'linear-gradient(180deg, #FDF8F0 0%, #F8EFE4 100%)',
+            '--bg-primary': 'transparent',
+            '--bg-secondary': '#FFFFFF',
+            '--bg-tertiary': '#F0E6D9',
+            '--text-primary': '#402E32',
+            '--text-secondary': '#7A6B62',
+            '--accent-primary': '#D97706',
+            '--accent-secondary': '#F59E0B',
+            '--status-online': '#4CAF50',
+            '--status-offline': '#757575',
+            '--danger': '#F44336',
+            '--scrollbar-track': '#F8EFE4',
+            '--scrollbar-thumb': '#D97706',
+        },
+        font: 'font-lato'
+    },
+    {
+        key: 'neon',
+        name: 'Neon',
+        properties: {
+            '--body-gradient': 'linear-gradient(180deg, #0D0D0D 0%, #1A1A1A 100%)',
+            '--bg-primary': '#1A1A1A',
+            '--bg-secondary': '#1F1F1F',
+            '--bg-tertiary': '#2A2A2A',
+            '--text-primary': '#FFFFFF',
+            '--text-secondary': '#B3B3B3',
+            '--accent-primary': '#39FF14',
+            '--accent-secondary': '#00BFFF',
+            '--status-online': '#39FF14',
+            '--status-offline': '#747F8D',
+            '--danger': '#FF073A',
+            '--scrollbar-track': '#1A1A1A',
+            '--scrollbar-thumb': '#39FF14',
+        },
+        font: 'font-roboto-mono'
+    },
+    {
+        key: 'acustico',
+        name: 'Acústico',
+        properties: {
+            '--body-gradient': 'linear-gradient(180deg, #FCFBF8 0%, #F5F1E9 100%)',
+            '--bg-primary': 'transparent',
+            '--bg-secondary': '#FFFFFF',
+            '--bg-tertiary': '#EAE4D9',
+            '--text-primary': '#3D3522',
+            '--text-secondary': '#6B5E4A',
+            '--accent-primary': '#8C6E4A',
+            '--accent-secondary': '#A68B6A',
+            '--status-online': '#558B2F',
+            '--status-offline': '#8D6E63',
+            '--danger': '#BF360C',
+            '--scrollbar-track': '#F5F1E9',
+            '--scrollbar-thumb': '#8C6E4A',
+        },
+        font: 'font-inter'
+    },
+    {
         key: 'rosa',
         name: 'Rosa',
         properties: {
@@ -149,9 +229,9 @@ export const THEMES: Theme[] = [
 ];
 
 export const initialUsersForDiscovery: (AppUser & { password?: string })[] = [
-  { id: 101, name: 'Casey', email: 'casey@example.com', password: 'password', avatarUrl: 'https://i.pravatar.cc/150?u=casey', bio: 'Exploring new sounds.', role: 'user', theme: 'solar', isSupporter: false },
-  { id: 102, name: 'Riley', email: 'riley@example.com', password: 'password', avatarUrl: 'https://i.pravatar.cc/150?u=riley', bio: 'Just here to vibe.', role: 'user', theme: 'ametista', isSupporter: true },
-  { id: 103, name: 'Jess', email: 'jess@example.com', password: 'password', avatarUrl: 'https://i.pravatar.cc/150?u=jess', bio: 'Producer and vocalist.', role: 'user', theme: 'floresta', isSupporter: false },
+  { id: 101, name: 'Casey', email: 'casey@example.com', password: 'password', avatarUrl: 'https://i.pravatar.cc/150?u=casey', bio: 'Exploring new sounds.', role: 'user', theme: 'vinil', isSupporter: false },
+  { id: 102, name: 'Riley', email: 'riley@example.com', password: 'password', avatarUrl: 'https://i.pravatar.cc/150?u=riley', bio: 'Just here to vibe.', role: 'user', theme: 'neon', isSupporter: true },
+  { id: 103, name: 'Jess', email: 'jess@example.com', password: 'password', avatarUrl: 'https://i.pravatar.cc/150?u=jess', bio: 'Producer and vocalist.', role: 'user', theme: 'acustico', isSupporter: false },
   { id: 104, name: 'Quinn', email: 'quinn@example.com', password: 'password', avatarUrl: 'https://i.pravatar.cc/150?u=quinn', bio: 'Singer-songwriter.', role: 'user', theme: 'rosa', isSupporter: false },
   { id: 105, name: 'Morgan', email: 'morgan@example.com', password: 'password', avatarUrl: 'https://i.pravatar.cc/150?u=morgan', bio: 'DJ and music lover.', role: 'user', theme: 'rubi', isSupporter: false },
 ];
